@@ -1,0 +1,75 @@
+springboot精要
+------------------------
+	1、自动配置
+	2、起步依赖
+		解决了版本依赖冲突的问题
+	3、命令行界面
+	4、Actuator
+		监视应用程序内部情况
+			1、spring应用程序上下文里配置的Bean
+			2、springBoot的自动配置做的决策
+			3、应用程序取到的环境变量、系统属性、配置属性和命令行参数
+			4、应用程序里线程的当前状态
+			5、应用程序最近处理过的Http请求的追踪情况
+			6、各种和内存用量、垃圾回收、web请求以及数据源用量相关的指标
+
+定义初始化类
+--------------------------------
+@SpringBootApplication 开启了Spring的组件扫描和SpringBoot的自动化配置
+@Configuration	表明该类使用Spring基于java的配置
+@ComponentScan：启动组建扫描，默认扫描当前类所在的包下
+@EnableAutoConfiguration:启动Spring的自动配置	
+@RunWith
+@SpringApplication 加载Spring应用程序上下文
+
+定义实体类
+----------------------------------------------
+@Entity	注解表明它是一个JPA实体，
+@Id 说明这个字段是实体的唯一标识
+@GeneratedValue 说明这个字段是自动生成的
+
+定义仓库
+--------------------------------------
+	通过继承JpaRepository<Entity,Key>，来实现对对象的增删改查
+	直接继承可以继承18个常用的持久化操作类型
+	
+定义web界面
+------------------------------------------
+	@Controller 这样的注解在进行配置的时候会自动化创建一个Bean
+	@RequestMapping 将所有的方法都映射到 ‘/’ 这个Url上面
+		动态链接 /fetch/{id} 这条动态链接 可以通过 @PathVariable 将{id}里面的值传递到id属性
+		@RequestMapping(value="/fetch/{id}",method=RequestMethod.GET)
+		String getDynamicUriValue(@PathVariable String id)
+
+自动配置中使用的条件注解
+-------------------------
+@ConditionalOnBean				配置某个特定的Bean
+@ConditionalOnMissingBean		没有配置特定的类
+@ConditionalOnClass				Classpath里有指定的类
+@COnditionalOnMissingClass		Classpath里面缺少指定的类
+@ConditionalOnExpression			给定的Spring Expression表达式计算结果
+@conditionalOnJava				java的版本匹配特定值或者一个范围值
+@ConditionalOnJndi				
+
+application.properties/application.yml
+---------------------------------------------
+	spring默认配置文件，可以从classpath加载该配置文件
+	
+SpringBoot属性资源优先级
+-----------------------------
+	1、命令行参数
+	2、java:comp/env里的JNDI属性
+	3、jvm系统属性
+	4、操作系统环境变量
+	5、随机生成的带random.*前缀的属性
+	6、应用程序以外的application.properties或者application.yml文件
+	7、打包在应用程序内的application.properties或者application.yml文件
+	8、通过@PropertySource标注的属性源
+	9、默认属性
+	
+application.properties或者application.yml文件存在位置
+------------------------------------------------------------
+	1、外置，在相对于应用程序运行目录的/config子目录
+	2、外置，在应用程序的目录里
+	3、内置，在config包内
+	4、内置，在Classpath根目录
