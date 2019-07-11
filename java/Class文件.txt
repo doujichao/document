@@ -1,0 +1,149 @@
+class文件结构
+------------------------
+	class文件格式采用一种类似于C语言结构体的伪结构来存储
+	这种伪结构中只有两种数据类型
+		1、无符号数
+			可以用来描述数字，索引引用，数量值，或者utf-8编码构成的字符串值
+			u1	1个字节
+			u2	2个字节
+			u4	3个字节
+			u8	8个字节
+		2、表
+			由多个无符号数或其他表作为数据项构成的符合数据类型，所有表都习惯以
+			“_info”结尾，表用与描述由层次关系的符合结构的数据
+			整个Class文件本质上就是一张表
+
+Class文件
+------------------------------
+	魔数：每个Class文件的头4个字节	class文件的魔数值为 0xCAFFBABE
+	接下来4个字节：版本号
+		5、6字节是次版本号
+		7、8字节是主版本号
+	接下来是常量池入口	
+		存放一个u2数据类型的数据:代表常量池容量计数值
+		字面值
+			类似于常量：包括类和接口的全限定名、字段的名称和描述符、
+				方法的名称和描述符
+		符号引用
+			编译原理方面的概念
+		常量内容 u1格式的标志位（1-12）+ 结构（每种类型都不一样）可以通过javap命令
+			来查看编译内容
+			标志位		描述						名称
+				1		utf-8编码的					CONSTANT_Utf8_info
+				3		整型字面量					CONSTANT_Integer_info
+				4		浮点行字面量				CONSTANT_Float_info
+				5		长整型字面量				CONSTANT_Long_info
+				6		双精度浮点型字面量			CONSTANT_Double_info
+				7		类或接口的符号引用			CONSTANT_Class_info
+				8		字符串类型字面量			CONSTANT_String_info
+				9		字段的符号引用				CONSTANT_Field_info
+				10		类中方法的符号引用			CONSTANT_Methodref_info
+				11		接口中方法的符号引用		CONSTANT_InterfaceMethodref_info
+				12		字段或方法的部分符号引用	CONSTANT_NameAndType_info
+	接下来是访问标志位（2个字节）：
+		这个标志用于识别一些类或接口层次的访问信息
+			标志名称			标志值				含义
+			ACC_PUBLIC			0x0001				是否位public
+			ACC_FINAL			0x0010				是否声明位fianl，只有类可设置
+			ACC_SUPER			0x0020				是否允许是哟弄个invokespecial字节码指令
+			ACC_INTETFACE		0x0200				标识这是一个接口
+			ACC_ABSTRACT		0x0400				标识abstract类型
+			ACC_SYNTHETIC		0x1000				标识这个类并非由用户代码产生的
+			ACC_ANNOTATION		0x2000				标识这是一个注释
+			ACC_ENUM			0x4000				标识这是一个枚举
+	类索引（u2类型）、父类索引（u2类型），接口索引（一组u2类型）
+	字段表：用户描述接口或类中声明的变量
+		字段表结构
+			类型			名称			数量
+			u2				access_flag		  1
+			u2				name_index	 	  1
+			u2				descriptor_index  1
+			u2				attribute_count	  1
+			attribute_info	attribute		  attribute_count
+	方法表
+		方法表结构
+		类型				名称				数量
+		u2					access_flags		1
+		u2					name_index			1
+		u2					descriptor_index	1
+		u2					attribute_count		1
+		attribute_info		attribute			attribute_count
+	属性表
+		属性名称			使用位置				含义
+		Code				方法表					Java代码编译成的字节码指令
+		ConstantValue		字段表					final关键词定义的常量值
+		Deprecated			类、方法表、字段表		被声明位deprecated的方法和字段
+		Exceptioins			方法表					方法抛出的异常
+		InnerClass			类文件					内部类列表
+		LineNumberTable		Code属性				Java源码的行号与字节码指令的对应关系
+		LocalVariableTable	Code属性				方法的局部变量描述
+		SourceFile			类文件					源文件
+		Synthetic			类、方法名、字段表		标识方法为编译器自动生成的
+			属性表应该满足的结构
+				类型				名称					数量
+				u2					attribute_name_index	1
+				u2					attribute_length		1
+				u1					info					attribute_length
+				
+		Code属性	
+			类型				名称						数量						说明
+			u2					attribute_name_index		1							指向常量池，默认为“Code”
+			u4					attribute_length			1							属性值长度
+			u2					max_stack					1							操作数栈深度最大值
+			u2					max_locals					1							局部变量存储空间
+			u4					code_length					1							字节码指令长度
+			u1					code						code_length					字节码指令
+			u2					exception_table_length		1
+			exception_info		exception_table				exception_table_length
+			u2					attributes_count			1
+			attribute_info		attributes					attributes_count
+		Exceptioins属性：	
+			类型		  名称						数量
+			u2			attribute_name_index		1
+			u4			attribute_length			1
+			u2			number_of_exceptions		1
+			u2			exception_index_table		number_of_exceptions
+		LineNumberTable属性
+			用于描述java源码行号和字节码行号之间的对应关系
+			类型			名称					数量
+			u2			attribute_name_index		1
+			u4			attribute_length			1
+			u2			line_number_table_length	1
+			line_number_info	line_number_table	line_number_table_length
+		LocalVariableTable属性
+			用于描述栈帧中局部变量表中的变量和java源代码中定义的变量之间的关系
+			不是运行时必要的属性
+			类型			名称					数量
+			u2			attribute_name_index		1
+			u4			attribute_length			1
+			u2			local_variable_table_length	1
+			local_variable_info	local_variable_table local_variable_table_length
+			local_variable_info 结构
+				类型			名称			数量
+				u2			start_pc			1
+				u2			length				1
+				u2			name_index			1
+				u2			descriptor_index	1
+				u2			index				1	
+		SourceFile属性（可选属性）		
+			类型			名称					数量
+			u2			attribute_name_index		1
+			u4			attribute_length			1
+			u2			sourcefile_index			1
+		ConstantValue属性
+			类型			名称					数量
+			u2			attribute_name_index		1
+			u4			attribute_length			1
+			u2			constantvalue_index			1
+		InnerClass属性	
+			类型			名称					数量
+			u2			attribute_name_index		1
+			u4			attribute_length			1
+			u2			number_of_classes			1
+			inner_class_info	inner_classes		number_of_classes
+				inner_class_info结构
+					类型			名称				数量
+					u2			inner_class_info_index	1
+					u2			outer_class_info_index	1
+					u2			inner_name_index		1
+					u2			inner_class_access_flags	1
