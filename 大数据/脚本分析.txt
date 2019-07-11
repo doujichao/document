@@ -1,0 +1,124 @@
+脚本分析
+
+start-all.sh   
+-----------------------------------------
+#!/usr/bin/env bash
+echo "This script is Deprecated. Instead use start-dfs.sh and start-yarn.sh"
+#取出上级目录
+bin=`dirname "${BASH_SOURCE-$0}"`
+#找出目录的路径
+bin=`cd "$bin"; pwd`
+
+#第一步执行的脚本----设置变量  libexec/hadoop-config.sh
+DEFAULT_LIBEXEC_DIR="$bin"/../libexec
+HADOOP_LIBEXEC_DIR=${HADOOP_LIBEXEC_DIR:-$DEFAULT_LIBEXEC_DIR}
+. $HADOOP_LIBEXEC_DIR/hadoop-config.sh
+
+#第二部分执行--启动hdfs sbin/start-dfs.sh
+# start hdfs daemons if hdfs is present
+if [ -f "${HADOOP_HDFS_HOME}"/sbin/start-dfs.sh ]; then
+  "${HADOOP_HDFS_HOME}"/sbin/start-dfs.sh --config $HADOOP_CONF_DIR
+fi
+
+#第三部分--启动yarn sbin/start-yarn.sh
+# start yarn daemons if yarn is present
+if [ -f "${HADOOP_YARN_HOME}"/sbin/start-yarn.sh ]; then
+  "${HADOOP_YARN_HOME}"/sbin/start-yarn.sh --config $HADOOP_CONF_DIR
+fi
+
+
+libexec/hadoop-config.sh
+-------------------------------------------------
+	1、COMMON_DIR
+		...
+		HADOOP_CONF_DIR
+		HEAP_SIZE=1000m，
+		CLASSPATH
+		
+
+sbin/start-dfs.xml
+----------------------------------
+	1、$HADOOP_LIBEXEC_DIR/hdfs-config.sh配置
+	2、hdfs getconfi -namenodes 	获取集群中namenodes的名称列表
+		
+	3、启动namenode
+		"$HADOOP_PREFIX/sbin/hadoop-daemons.sh" \
+		  --config "$HADOOP_CONF_DIR" \
+		  --hostnames "$NAMENODES" \
+		  --script "$bin/hdfs" start namenode $nameStartOpt
+			  
+	4、启动datanode
+		"$HADOOP_PREFIX/sbin/hadoop-daemons.sh" \
+			--config "$HADOOP_CONF_DIR" \
+			--script "$bin/hdfs" start datanode $dataStartOpt
+	5、启动2nn
+		 "$HADOOP_PREFIX/sbin/hadoop-daemons.sh" \
+			  --config "$HADOOP_CONF_DIR" \
+			  --hostnames "$SECONDARY_NAMENODES" \
+			  --script "$bin/hdfs" start secondarynamenode
+			  
+libexec/hdfs-config.sh
+--------------------------------
+	运行libexec/hadoop-config.sh
+	
+sbin/hadoop-daemons.sh		启动守护进程的脚本
+-------------------------------------------
+	1、libexec/hdfs-config.sh	//执行配置脚本
+	2、slaves.sh   循环slaves文件，通过ssh方式登陆远程主机，执行相应命令
+		[hadoop-daemons.sh]
+		
+bin/hadoop
+-------------------------------------
+	1、libexec/hadoop-config.sh	//执行配置脚本
+	2、调用java程序
+
+bin/hdfs
+-------------------------------------
+	1、libexec/hadoop-config.sh	//执行配置脚本
+	2、调用java程序		
+
+a.atomic		//原子性
+c.conssitent	//一致性
+i.isolation		//隔离性
+d.durable		//永久性
+
+常用命令
+-------------------------------
+	1、格式化系统
+		hadoop namenode -format
+	2、hadoop fs	等价于	 hdfs dfs
+		put	== copyFormLocal    //上传文件
+		mv						//重命名
+		get==copyToLocal		//下载文件
+		moveFromLocal			//移动到hdfs
+		rm -r --				//删除文件
+		-rmdir					//删除文件夹/目录
+		-cp 					//文件复制
+	
+
+精确控制每台机器上的进程
+hadoop-daemon.sh start namenode	在本机启动名称节点
+hadoop-daemon.sh start secondarynamenode 在本机启动第二名称节点，如果本机没有名称节点则报错
+hadoop-daemons.sh start datanode	启动数据节点
+单独启动某个数据节点
+	ssh u003 							//登陆u003
+	hadoop-daemon.sh start datanode		//启动u003上的数据节点
+	
+hadoop的配置信息
+------------------------------
+	1、[namenode的本地目录配置成多个，则每个目录对应的值相同]
+	[hdfs-site.xml]
+	dfs.namenode.name.dir=file://${hadoop.tmp.dir}/dfs/name1,file://${hadoop.tmp.dir}/dfs/name2
+	
+	2、datanode也可以配置多个目录，不是副本
+	[hdfs-site.xml]
+	dfs.datanode.data.dir=file://${hadoop.tmp.dir}/dfs/data1,file://${hadoop.tmp.dir}/dfs/data2
+	
+hadoop hdfs文件块大小（128M）	
+-------------------------------------------------
+	磁盘寻址时间
+	磁盘寻道时间：10ms
+	磁盘的IO速率：100M/s
+	
+通过API访问hdfs
+-----------------------------	

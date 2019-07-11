@@ -1,0 +1,118 @@
+NIO
+------------------
+	NIO			//New	IO
+	AIO			//Asynchronized IO
+	完成高速IO，而无需编写自定义native代码
+	directionBuffer			//直接缓存区，在沙箱之外的
+	Unsafe					//
+
+Stream vs Block
+-----------------------------------
+	java io包基于stream技术，按照一个字节处理
+	java nio包基于块技术，使用分块方式处理数据，比流技术更加块
+			编程不易
+
+Channel
+----------------------------------------------
+	打开的连接（硬件，File，Socket，程序）
+	Channel和Buffer是NIO的核心对象
+	类似与Stream，数据通过Channel传输
+	接口实现：
+		FileChannel(文件通道)		
+		SocketChannel			//tcp    常用
+		DatagramChannel			//udp
+	
+	
+Buffer
+----------------------------------------
+	缓冲区[]:本质是数组
+	是容器（包含基本数据类型，byte）对象的核心
+	从channel中读取的数据，进入Buffer中
+	NIO必须通过Buffer完成数据的读写，跟踪读写的过程
+	[术语]
+	mark			//标记
+	capacity		//容量
+	limit			//限制，第一个不能读写的元素的索引值
+	position		//位置
+	0 <= mark  <= position <= limit <= capacity
+	remain			//limit-position：剩余量
+	
+	Clearing		//清除
+	flipping		//拍板
+	rewinding		//环绕
+	
+练习
+----------------------------------
+	0、clear
+		positioin=0		 	//全部启用，重头开始
+		limit = capacity 	//
+		mark=-1；
+	1、flip
+		limit=position：	//位置为限制点
+		position=0			//定位到开头
+		mark=-1				//丢弃
+	2、rewind
+		position=0			//推到重来
+		mark=-1				//
+	3、compact				//
+		System.arraycopy(hb,ix(position()),hb,ix(0),remaining())
+		position(remaining())
+		limit(capacity)
+		discardMark()
+	4、slice				//切片
+	return new HeapByteBuffer(hb,-1,0,
+		this.remaining(),
+		this.remaining(),
+		this.positioin+offset);
+		HeapByteBuffer(byte[] buf,int mark,int pos ,int lim,int capacity,int off)
+		
+	5、truncate				//禁用整个缓冲区
+		mark=-1
+		position=0
+		limit=0
+		capacity=0
+	
+	6、reset		回到关注点
+		int m=mark；
+
+Socket
+---------------------------------------
+	1、ServerSocket
+		服务器端
+		ServerSocket ss=new ServerSocket(8888);	//TCP
+		Socket s=ss.accept();			//接受请求连接，Stream
+		
+		SocketInputStream.read(...)		//阻塞
+		SocketOutputStream.write(...)	
+		
+	2、Socket
+		客户端
+
+SocketChannel
+------------------------------------
+	1、ServerSocketChannel
+		ServerSocketChannel ssc=ServerSocketChannel.open();
+		ssc.bind(new InetSocketAddress("localhost",8888));
+		ssc.configureBlocking(false);
+		
+		SocketChannel sc=ssc.accept();
+		
+	2、SocketChannel
+		Socket通道
+	3、SocketChannel.finishConnnection();
+		处理连接完成工作
+		1、如果连接已经完成，立即返回true
+		2、如果通道时非阻塞的且连接还未完成，则返回false
+	4、Selector
+		Selector.open();通过这个方法获得挑选器对象
+		挑选器
+		内部维护了三个集合
+		1、KeySet					//所有通道注册时产生的key形成的集合
+		2、Selected-key set			//通道上已经发生了感兴趣的事件的通道形成的key集合
+		3、cancelled-key set		//已经被取消但还未注销的通道所产生的key集合
+		初始三个集合都为空
+		
+	NIO	
+----------------------------------------------
+		非阻塞+byteBuffer
+		Channel.read(buf)+write(buf)

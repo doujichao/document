@@ -1,0 +1,88 @@
+
+写的顺序：select ... from... where.... group by... having... order by.. limit [offset,]
+(rows)
+执行顺序：from... where...group by... having.... select ... order by... limit
+
+oracle添加远程登陆，添加网络登陆地址修改 net configuration assistant,修改之后就可以使用plsql登陆数据库
+
+解锁锁定用户
+----------------------------------
+	1、控制台登陆
+		> sqlplus   
+		> 用户名：system
+		> 密码：
+	2、解锁语句
+		alter user 用户名 account unlock;	
+	3、修改口令语句用：
+		alter user 用户名 identified by 密码;	
+		
+	多条插入语句：
+		insert all [表名 (字段列表)  values (数据列表) ] ... select 1 from dual
+	可以使用正则表达式的4个函数：
+		REGEXP_LIKE()：过滤数据
+		REGEXP_REPLACE()：替换字符串
+		REGEXP_INSTR()：搜索字串
+		REGEXP_SUBSTR()：搜索字串
+		
+计算字段：
+----------------------------------------
+	RTrim()：函数将从值的右边修剪掉所有的空格
+	Trim():用于修建字符串两边的空格
+	|| ：用于拼接字符串
+	+ - * / ：四则运算
+	
+函数 
+------------------------
+	文本函数：用于操作文本字符串
+		常用文本函数：
+		函数 				描述
+		Length()		返回字符串的长度
+		Lower()			把字符串转换成小写形式
+		LPad()			在字符串左边填充空格
+		LTrim()			从字符串左边修剪空白
+		RPad()			在字符串右边填充空格
+		RTrim()			从字符串右边修剪空白
+		Soundex()		返回字符串的Soundex值
+		SubString()		返回字符串内的字符
+		Upper()			把字符串转换成大写形式
+		
+	数值函数：用于对数值型数据执行算术运算
+		函数 				描述
+		Abs()			返回数字的绝对值
+		Cos()			返回指定角度的三角余弦
+		Exp()			返回指定数字的指数值
+		Mod()			返回除法运算的余数
+		Sin()			返回指定角度的三角正弦值
+		Sqrt()			返回指定数字的平方根
+		Tan()			返回指定角度的正切值
+		
+	日期和时间函数：用于操作日期和时间值
+		常用的日期函数：
+		函数 				描述
+		Add_Month()		给日期添加月份
+		Extract()		从日期和时间中减去年、月、日、时、分或秒
+		Last_Day()		返回月份的最后一天
+		Months_Between	返回两个月份之间的月份
+		Next_Day()		返回指定日期后面的那一天
+		Sysdate()		返回当前日期和时间
+		To_Date()		把字符串转换成日期
+		
+	系统函数：返回特定于所用的DBMS的信息
+	
+	聚合函数：
+		函数 			描述
+		Avg()			平均值
+		COUNT()			行数
+		MAX()			最大值
+		MIN()			最小值
+		SUM()			求和
+		
+视图：
+	create view 视图名称 AS select 语句
+	
+存储过程：
+----------------------
+	create or replace procedure hello is 
+	begin
+	dbms_output.put_line('hello world');
+	end;

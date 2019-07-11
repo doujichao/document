@@ -1,0 +1,58 @@
+使用hadoop hdfs API访问hdfs文件系统
+-----------------------------------------------
+	1、Configuration
+		配置对象，加载配置文件
+		addDefaultResource();从classpath加载
+	2、FileSystem
+		DistributedFileSystem,是FileSystem的一个实现，用于和hadoop的dfs交互
+	3、Path	
+		文件或者目录的名称。 / 是路径分割符，有绝对路径和相对路径之分
+		/x/x/xx			//绝对路径
+		hello.txt		//相对路径
+	4、
+
+block
+---------------------------
+	128M
+	磁盘IO速率100M/s
+	让磁盘的寻道时间占用数据传输时间的1%
+
+网络拓扑
+------------------
+	每个数据中心都有很多机架，
+	每台机架有一个交换机，每台机器可以看成一个节点，
+	每个交换机可以看作是多一个距离
+	以此来作为网络之间的拓扑距离来计算那两个节点之间的
+	距离最短
+	
+剖析文件写入过程
+--------------------------------------------
+hadoop IO
+	1、客户端命令
+	2、FileSystem
+		文件系统，DistributeFileSystem
+	3、FSDataInputStream
+		FSDataInputStream fis=FileSystem.open()
+	4、FSDataOutputStream
+		FSDataOutputStream fos=FileSystem.create(path);
+	
+副本节点的选择（机架感知）
+---------------------------------------------
+	1、默认
+		第一个副本在client所在的节点上，如果客户端在集群外随机选一个。
+		第二个副本在与第一个不同机架的随即节点上
+		第三个副本和第二个节点在不同的机架上
+	2、
+
+自定义机架感知
+---------------------------------
+	1、创建类实现DNSToSwitchMapping接口
+	2、配置文件
+		[core-site.xml]
+		<property>
+		  <name>net.topology.node.switch.mapping.impl</name>
+		  <value>org.apache.hadoop.net.ScriptBasedMapping</value>
+		 </property>
+	3、分发core-site.xml	 
+	4、编译程序，打成jar包，分发到所有节点的hadoop的classpath下
+		/soft/hadoop/shared/common/lib

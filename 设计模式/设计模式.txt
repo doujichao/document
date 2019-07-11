@@ -1,0 +1,153 @@
+flyweight模式(享元)：
+	在编程中，有时会发现创建大量的同类的对象
+	对象的创建在java时比较耗时的，同时这些的回收也会占用较多的资源
+	享元的意义是：尽可能重复利用已经创建的对象
+	条件：对同一个对象的复用不会影响处理结果
+	
+Command模式：
+	它尝试以物件来代表实际行动，命令物件可以把行动(action)及其参数封装起来，于是这些行动可以
+		重复多次
+		取消
+		取消后重做
+	主要意义：
+		1、将复杂的操作分解，简化了每一个操作的功能，达到解耦的目的
+		2、通过将多个command组合，可以实现复杂的操作，实现command的复用
+		3、支持command的取消以及重做
+
+责任链模式：
+	责任链模式由一系列的command对象组成，在处理时，按照command对象的顺序逐步处理
+	可根据command对象的执行情况决定终止执行或继续执行
+	command模式决定了当执行力一个command的时候，只能够完成一个小任务
+
+Iterator模式（迭代器设计模式）：
+	类似于java遍历集合
+	使用原因：使用迭代器可以将实现和遍历分开
+	作用：编写可复用的类
+	易混淆概念：
+		下一个(next)：返回当前元素，并指向下一个元素
+		最后一个(hasNext)：确认接下来是否可以调用next方法
+		
+适配器模式(Adapter):也被称为Wrapper模式，Wrapper有包装器的意思
+	适配器模式有两种：
+		1、类适配器模式(使用继承的适配器)
+		作用：代码隐藏
+		实现：通过继承来实现对对象的封装
+		2、对象适配器模式(使用委托的适配器)
+		实现：通过委托来实现
+	Adapter模式中有以下登场角色：
+		Target(对象)：负责定义所需的方法
+		Client(请求者)：调用对象
+		Adaptee(被适配者)：被适配的对象
+		Adapter(适配)：使用Adaptee角色的方法来满足Target角色的需求
+	使用时机：
+		Adapter对现有的类进行适配，生成新的类，满足新的需求
+		软件升级时维护新旧版本
+		
+Template Method(模板方法模式)：
+	含义：带有模板功能的模式，组成模板的方法被定义在父类中，而这些方法是抽象方法
+		所以，父类无法查看最终会如何实现，，唯一知道的是父类调用了这些方法
+	使用角色：
+		AbstractClass(抽象类)：声明在模板中使用的抽象方法
+		ConcreteClass(具体类)：实现抽象类中的抽象方法
+	优点：可以复用父类中的算法，减少出现问题的可能，和之后的工作量	
+	父类和子类的一致性，符合里氏替换原则(无论交换那个子类，程序都能够正常运行)
+
+Factory Method(工厂方法模式)：
+	使用模板方法来生成实例，这就是Factory Method模式
+	使用角色：
+		Product(产品)：属于框架这一方，是一个抽象类，定义了Factory Method模式中生成的实例的接口
+		Builder(创建者)：框架，负责工厂的生成实例的抽象逻辑
+		ConcreteProduct(具体的产品)：具体加工，决定了具体的产品
+		ConcreteBuilder(具体的创建者)：具体的架构，生成具体的产品
+	生成实例---方法的三种实现方式：
+		1、指定其为抽象方法，通过子类实现传入
+		2、为其实现默认方法，默认方法实现之后，如果子类没有实现该方法，将进行默认处理
+		3、在其中抛出异常，默认方法为抛出异常，这样一来，如果未在子类中实现该方法，程序就会报错
+
+Singleton(单例模式)：
+	public class Singleton {
+    private static Singleton singleton=new Singleton();
+    private Singleton(){
+        System.out.println("生成一个实例");
+    }
+    public static Singleton getInstance(){
+        return singleton;
+    }
+}
+
+Prototype(原型模式)：		
+	在不指定类名的前提下生成实例：
+		1、对象种类繁多，无法将他们整合到一个类中
+		2、难以根据类生成实例
+		3、想解耦框架与生成的实例时
+	使用角色：
+		Prototype(原型)：定义复制现有实例来生成新实例的方法
+		ConcretePrototype(具体的原型)；负责实现现有实例并生成新实例的方法
+		Client(使用者)：负责使用复制实例生成新的实例
+	即使没有java文件，也能复用该类才是关键	
+	clone方法和java.lang.Clonable接口：
+		java语言为我们准备了用于复制实例的clone方法，但是，想要调用clone方法
+		被复制对象的类必须实现java.lang.Clonable接口，clone方法的返回值时复制出的新的实例
+	浅复制：	
+		clone方法进行的复制只是将被复制实例的字段值直接复制到新的实例中，例如：当字段中保存的是
+		数组的时候，如果使用clone方法进行复制，则只会复制该数组的引用，并不会一一复制数组的元素
+		
+Builder(建造者模式):
+	用于组装具有复杂结构的实例的模式
+	使用角色：
+		Builder(建造者)：定义用于生成实例的接口
+		ConcreteBuilder(具体建造者)：实现Builder角色的接口的类
+		Director(监工)：负责使用Builder角色的接口来说生成实例
+		Client(使用者)：
+		
+Abstract Factory(抽象工厂模式)：
+	抽象工厂的工作是：将“抽象零件”组装成“抽象产品”
+	使用角色：
+		AbstractProduct(抽像产品)：定义抽象工厂角色所生成的抽象零件和产品的接口
+		AbstractFactory(抽象工厂)：定义用于生产抽象产品的接口
+		Client(委托者)：调用AbstractFactory角色和AbstractProduct角色的接口进行工作
+			对具体的零件、产品和工厂一无所知
+		ConcreteProduct(具体的产品)：负责实现AbstractProduct角色的接口
+		ConcreteFactory(具体工厂)：负责实现AbstractFactory角色的接口
+			
+生成实例的方法介绍：
+	1、new：使用new关键字来生成实例
+	2、clone：可以通过实现Cloneable接口来调用clone方法，该方法为浅克隆
+	3、newInstance：可以通过Class.newInstance方法来创建实例
+	
+Bridge模式(桥梁模式):将类的功能层次结构和类的实现层次结构连接起来，采用委托的模式来实现桥梁模式
+	类的功能层次结构：增加新功能从而产生的层次结构，父类有基本功能，在子类中增加新的功能
+	类的实现层次结构：增加新的实现的时候产生的层次结构
+	Abstraction(抽象化)：属于类的‘功能’层次结构的最上层，定义了基本的功能
+	RefinedAbstraction(改善后的抽象化)：增加了新的功能的角色
+	Implementor(实现者)：属于类的‘实现’层次最上层，定义了用于实现Abstraction角色的接口
+	ConcreteImplementor(具体实现者)：该角色负责实现在Implementor角色中定义的接口
+	继承是强关联关系，委托是弱关联关系
+	
+Strategy(策略模式)：能够整体的替换算法，让我们轻松的以不同的算法去解决同一个问题
+	使用角色：
+		Strategy(策略)：实现策略所必须的接口
+		ConcreteStrategy(具体的策略)：负责实现Strategy角色的接口
+		Context(上下文)：保存了ConcreteStrategy角色去实现需求
+		
+Composite(组合模式)：
+	使用角色：
+	Leaf(树叶)：表示内容的角色
+	Composite(复合物)：表演器的角色，可以放入Leaf角色和Composite角色
+	Component(组件)：使Leaf和Composite具有一致性，是Leaf和Composite的父类
+	Client:使用Composite的角色
+
+Decorator(装饰者模式)：不断的为对象添加装饰的设计模式
+	使用角色：
+	Component(组件)：增加功能时的核心角色
+	ConcreteComponent(实现组件)：实现了Component角色定义的接口的具体蛋糕
+	Decorator(装饰物)：与Component角色有相同的接口，内部保存了被装饰对象角色，装饰角色知道要装饰对象
+	ContreteDecorator(具体的装饰物)：
+	在Decorator采用了委托的方法，使类之间形成弱关联关系
+
+Visitor(访问者模式)：数据结构和处理分离开，集中处理在Visitor通过java类型寻找方法来分支每种结果的处理
+	使用角色：
+	Visitor(访问者)：负责对数据结构中每个具体的元素声明一个用于方法的方法
+	ConcreteVisitor(具体的访问者)：负责实现所有的方法
+	Element(元素)：Visitor角色的访问对象，声明了accept方法
+	ConcreteElement()

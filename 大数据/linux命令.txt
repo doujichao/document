@@ -1,0 +1,610 @@
+客户机桌面模式和文本模式切换
+----------------------------
+	1、ctrl+alt+f6		//文本模式
+	2、ctrl+alt+f7		//桌面模式	
+	
+查看系统资源
+-----------------------
+	df -hl
+	
+查看防火墙状态
+--------------------------------
+sudo ufw status
+关闭防火墙
+ufw disable
+
+查看端口状态
+netstat -ano | grep 端口号
+netstat -lntup | grep 名称 查看是否包含该应用的端口
+lsof -i	：端口号			//查看端口号
+
+查看ip解析状态
+---------------------------
+	arp -a
+
+
+修改别的主机root用户可以登陆
+----------------------------------
+	1、sudo nano /etc/ssh/sshd_config
+		取消注释改为	PermitRootLogin yes
+		取消注释		StrictModes yes
+	2、重新启动
+		/etc/init.d/ssh restart
+
+开机进入文本文件
+---------------------------
+	
+1.修改/etc/default/grub文件
+    [/etc/default/grub]
+     ...
+     //图形模式
+     GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+     //文本模式
+     把GRUB_CMDLINE_LINUX=”" 改为 GRUB_CMDLINE_LINUX=”text”
+     去掉 GRUB_TERMINAL=console 的注释
+     ...
+     //修改文版模式的分辨率
+     GRUB_GFXMODE=640x480
+ 
+2.运行update-grup更新启动项
+     $>sudo update-grub
+     $>sudo systemctl set-default multi-user.target  
+     $>sudo reboot 
+     
+3.手动启动图形模式
+     $>sudo systemctl start lightdm  
+	 init 5  可以以桌面模式打开
+
+
+修改主机名
+---------------------------------
+	echo 新主机名 > hostname-------hostname位置/etc/hostname
+
+修改dns解析
+-----------------------------
+	/etc/hosts	修改 [地址 名称]
+
+追加命令的时候需要注意顺序
+文件第一个字符表示文件类型
+	l：连接文件
+		1、语法   ln
+		2、符号链接（symbolic link）-------------ln	-s 源文件 连接文件名称 
+			相当于window的快捷方式w
+			源文件删除，连接文件会变成红色，不可用，删除后如果重新创建一个新的源文件
+			这时连接文件重新可以使用
+		3、硬链接（hard link）------------ ln 源文件 链接文件名称
+			两个完全相同的文件，两者实时同步，删除一个文件，另个文件不删除
+			硬链接文件也是普通的文件，修改硬链接文件，另外一个文件也发生改变
+			但是删除的时候不会删除原文件
+	类型 owner group other
+	d 	 rwx  	rwx   rwx
+	
+	
+文件和权限
+------------------------------
+	1、文件类型
+		b：块文件
+		-：普通文件
+		d：目录
+		l：连接文件
+	2、权限
+		ower（user）		//主人
+		group				//组，Linux用户隶属于组，可以隶属于多个组
+								但是有一个首要(primary group)组，可以从属于多个组()里面
+		other				//其他人
+		all					//ower + group + other
+	3、控制权限	（使用二进制修改）
+		r:read			  	//读
+							111=7
+		w:write				//写
+		x:execute 			//执行
+
+权限说明
+-------------------------------
+	1、read
+		文件：查看文件的内容
+		文件夹：查看文件夹包含的资源
+	2、write
+		文件：修改文件内容
+		文件夹：创建文件和删除文件
+	3、执行
+		文件：可执行文件
+		文件夹：是否可进入文件夹
+		
+修改文件权限
+-------------------------------
+	chmod			//修改权限：chmod ugo+rwx 文件名
+					//删除权限：chmod ugo-rwx 文件名
+		-R + 数字	//递归修改权限：chmod -R 777 文件名	
+	
+	chown			//改变用户
+		
+增减新用户
+------------------------
+	1、useradd
+		是底层添加用户的一个命令，不推荐使用
+	2、adduser
+		是底层添加用户的一个命令
+		adduser --system  --home /home/用户名 
+	
+
+Linux文件夹结构
+-----------------------------------
+	/bin			//二进制目录
+	/sbin			//二进制文件目录
+	/dev			//device,设备目录,光驱，磁盘，分区
+	/etc			//配置文件目录
+	/lib			//库文件，共享对象文件，（so---shared object,等价于dll文件）
+	/home			//主目录，homepage
+	/meida
+	/mnt
+	/opt
+	/root			//root用户的主目录
+	/usr			//
+	/usr/bin
+	/usr/sbin
+
+	window 				linux
+	c:\cd 				$>cd				//改变目录
+	c:\dir 				$>ls				//列出文件目录
+	c:\cd 	/?			$>cd --help			//改变目录	
+	c:\					$>ls -al | more		//改变目录
+	c:\cd 				$>cd				//改变目录	
+	
+Linux基本操作
+------------------------------
+
+
+more 		显示一屏
+	空格	下一屏，翻屏
+	q		退出
+	
+man xxx		查看帮助
+xxx --help  查看帮助
+info xxx	查看帮助
+对于内置命令可以使用  help if 查看帮助
+
+
+
+clear		清屏
+whoami		当前用户是谁
+which		查询命令的路径，查询可执行文件的地址
+echo		输出字符
+cd ~		回到当前用户的home目录
+pwd			显示当前目录
+su	root	切换用户
+sudo passwd	切换用户	//输入当前用户密码，输入、
+ifconfig	查看ip
+	如果该命令不管用apt install net-tools
+
+
+mkdir	创建文件夹
+	-p 创建多级文件夹
+find . | grep abc 查看abc的命令
+grep 过滤的时候需要进行转义	使用 \
+rm		删除目录
+	-r	递归删除，删除文件夹和文件夹里面的内容
+	-f	直接删除，忽略已经不存在的文件夹
+touch 	创建文件	
+	-c	
+echo	
+	内容 > 文件名	覆盖模式	如果文件存在，写入文件，如果文件不存在，创建文件写入内容
+	内容 >>	文件名	追加模式
+	
+cat	文件名	直接查看文件内容	
+
+使用nano编辑器
+----------------------------
+	1、nano 文件名
+	2、ctrl+o   //保存
+	3、ctrl+x	//退出
+	4、ctrl+K	//剪切一行
+	5、ctrl+U	//复制一行
+	
+cp	拷贝文件	
+	cp 源文件目录 目标文件目录
+	-r 			//拷贝文件夹
+	
+mv	移动文件
+	不同目录下是移动操作
+head	-数字 文件名	//显示开头n行数据
+tail	-数字	文件名	//显示结尾n行数据
+
+reboot		//重启	
+shutdown -r now //关机，-p关电源，-r：关电源
+halt			//关机关电源
+file			//描述文件类型
+verbose			//详细信息
+
+tar			//归档解归档	常用命令组合 -xzvf
+	-c		//创建新的归档文件
+	-f		//指定文件
+	-x 		//解档，从归档文件中抽取
+	-v		//verbose，详细信息
+	-z		//通过gzip对文件进行过滤 
+	-t		//查看归档文件的内容
+	-r		//追加文件到tar中
+
+ls			//列出文件目录
+	-h		//人性化可读
+	-a		//显示全部文件
+	-l		//列表展示
+
+gizp [选项] [文件名]
+	-d 		//解压缩
+	-1		//时间优先
+	-9		//空间有限
+	-c		//
+
+动态命令执行
+-------------------------------------------
+``			//反引号，按照命令进行执行，相当于命令的嵌套
+$()			//命令嵌套使用
+$			//打印环境变量	
+	echo	$PATH
+	echo	"$PATH"
+	echo	${PATH}
+xargs		//将多行变成单行 用空格分割
+常用命令组合	find . | grep txt | cp `xargs` 目录
+
+
+光驱的挂载，过载外设
+mount /dev/cdrom 文件夹名称		//将光驱挂载到制定文件夹下，打开文件夹可以浏览光驱内容
+umount 文件夹名称				//将制定文件夹中挂载的光驱卸载
+
+
+ln		//创建连接文件
+
+
+jobs 
+---------------------------
+	显示后台作业
+	
+kill  杀死进程 ----------kill %进程号
+
+ps
+---------------------------
+	查看进程信息		//process show
+	-A					//显示所有的进程信息
+	-f					//所有格式
+
+cut
+----------------------
+	对每行文本进行剪切
+	cut -c 10-16	对文本每行进行剪切处理显示10到16行	
+	cut -c -16	对文本每行进行剪切处理显示开始到16的字符	
+	
+fdisk
+---------------------------------------
+	查看磁盘信息，分区
+	sudo fdisk -l /dev/sda 			//查看sda磁盘分区
+	
+df
+---------------------------------
+	disk free 磁盘空闲量
+	-a		//显示所有的分区
+	-h		//人性化可读
+	
+dirname		//查看文件所在目录	
+basename	//输出文件的基本名称（取出目录的部分）
+
+cd 
+------------------------------
+	-p			//通过链接文件跳转目录
+	
+export	mypath=/root	//导入环境变量，只在当前会话中有效
+path环境变量，window使用；号分割，linux使用：分割
+export mypath=${path1:-${path2}}	//三元运算符，如果path1不存在，取path2的值
+export mypath=					//删除环境变量	 
+
+if   
+---------------------------------
+	if COMMANDS; then COMMANDS; [ elif COMMANDS; then COMMANDS; ]... [ else COMMANDS; ] fi
+	if[$# -lt 1]
+	if[$# -gt 1]
+	if[-e xxx]	//是否存在
+	if[-d]		//wrong，需要空格
+	if[-d xxx]	//right
+
+
+Linux内置变量的访问方式
+------------------------------------
+	1、$?	
+		返回刚刚执行命令的结果，0：成功 !0：失败
+	2、$#
+		获取参数个数
+		rm -r bin 		//$# =2
+	3、$n
+		获取第几个参数
+		$0				//命令本身
+		$1				//第一个参数，rm -r bin  $1 =-r
+	
+	4、$@
+		得到所有参数
+		rm -r bin 		//$@ = -r bin
+		
+	5、shift
+		向左移动参数，左边的参数会被覆盖掉
+		
+命令组合
+----------------------------
+	1、a && b
+		a执行成功之后，再执行b
+	2、a || b
+		a执行失败之后，在执行b
+	3、a ; b
+		a执行完之后，执行b，可以切换目录
+	4、(a ; b)
+		同3，但是不切换目录
+		
+NetCat
+------------------------------------
+安装nc
+	1、 wget   http://vault.centos.org/6.6/os/x86_64/Packages/nc-1.84-22.el6.x86_64.rpm
+	2、rpm  -iUv  nc-1.84-22.el6.x86_64.rpm
+	3、开始使用
+使用	
+	1、瑞士军刀
+	2、TCP/IP
+		transfer control protocal,internet protocal
+		Socket
+	3、使用
+		nc	-l 8888 & 	//在本机启动serversocket进程，&表示在后台运行
+		nc localhost 8888		//启动客户端连接到8888
+	4、使用nc传递文件	
+		nc -l 8888 > ccc.txt 		//服务器端，重定向输出
+		nc localhost 8888 < hello.txt //客户端，重定向输入
+	5、端口扫描	
+		-v 			//详细信息
+		-w			//连接超时
+		-z			//端口扫描
+		
+命令前后台切换
+----------------------------------------
+	1、启动命令式直接放到后台
+		nc -l 9999 & 		//
+	2、将当前进程暂时放入后台，变成作业（jobs）
+		ctrl + z
+		jobs			//查看后台运行的所有作业，只需要jobid
+	3、将后台job激活，并在后台运行
+		bg	%1
+	4、将后台作业切入到前台运行
+		fg	%1
+
+apt
+-------------------------------
+	advanced package tookit,高级包管理工具
+	1、apt-get
+		update				//更新软件包列表
+		upgrade				//升级
+		install				//安装
+		remove				//删除
+		purge				//删除软件和配置文件
+	2、apt-cache
+		apt-cache search jdk
+	3、
+	
+修改ubuntu的软件源列表
+-------------------------------------------
+
+	0、首先需要查询linux的版本信息，lsb_release -a命令
+	1、/etc/apt/source.list		查看apt-get-resource-list.txt
+		
+		更改dns	/etc/resolv.conf		8.8.8.8
+		重启网络服务/etc/init.d/networking restart
+		
+	2、更新软件包列表
+		sudo apt-get update
+	3、升级软件包
+		apt-get upgrade
+	查看进程 ps -Af | grep ssh
+
+从本地安装桌面
+----------------------------------
+	1、取得iso文件
+	2、挂在iso文件到/mnt/下
+	3、修改/etc/apt/sources.list
+		deb file:/mnt/cdrom ./	将本地软件源
+	4、更新和升级软件源
+		apt-get update
+		apt-get upgrade
+	5、搜索软件包
+		sudo apt-cache search ubuntu-desktop
+	6、安装软件
+		sudo apt-get install ubuntu-desktop
+	7、卸载软件
+		sudo apt-get remove ubuntu-desktop
+
+安装虚拟机增强工具
+------------------------------------------------
+	1、VMWare 	-- > 重新安装 VMWare Tool
+	2、自动打开光驱文件
+	3、复制vmware-tool-xxxx.tar.gz到桌面
+	4、右键vmware-tool-xxxx.tar.gz释放到这里
+	5、打开终端
+	6、进入~/Desktop/vmware-tools-distrib
+	7、执行python脚本
+		sudo ./vmware-tool.pl
+	8、一路回车
+	9、Enjoy...，成功了！！
+	10.
+	
+客户机屏幕自适应
+-----------------------------------------------
+	1、关闭可客户机
+	2、编辑客户机的设置
+		虚拟机 -> 虚拟机设置 -> 显示器 -->指定显示器设置
+	3、ok
+	4、启动客户机
+	
+客户机和宿主机共享文件夹
+-----------------------------------------
+	1、编辑客户机的设置                                            
+		虚拟机 -> 虚拟机设置 --> 选项 --> 共享文件夹
+	2、进入客户机的/mnt/hgfs查看共享文件夹
+	
+共享文件夹显示失败
+--------------------------------------------------	
+	1、vmware-hgfsclient			//查看共享文件夹是否已经建立
+	2、cd /mnt 查看hgfs文件以及权限
+	3、给普通用户赋权限		sudo chmod 777 ./hgfs
+	4、修改归属人和归属组	sudo chown ubuntu:ubuntu hgfs -R
+	5、再次使用挂载命令		vmhgfs-fuse .host:/  /mnt/hgfs
+	
+	
+	
+客户机和宿主机之间共享剪切板
+---------------------------------------------
+	1、编辑客户机的设置
+		虚拟机 -> 虚拟机设置 --> 选项 --> 客户机隔离
+	2、选中复选框
+	
+客户机和宿主机支持拖放	
+	
+apt-get
+---------------------------------
+	1、update 重新更新包的list文件/etc/apt/resources.list
+	2、upgrade 更新一个文件
+	3、install 安装一个包
+	4、remove	删除一个包
+	5、purge	删除一个包，同时删除该包的配置
+	
+	
+apt-cache
+--------------------------------
+	1、search	根据正则表达式搜索包的list文件
+	
+
+
+dpkg
+------------------------------
+	1、直接安装.deb软件包
+		dpkg -i gedit_4...
+	2、通过which查看是否安装成功
+		which gedit
+	3、卸载软件包
+		sudo dpkg --remove gedit
+
+dpkg-query
+=================================
+	1、查看本地安全的软件包
+		sudo dpkg-query --list | grep gedit
+克隆客户机
+-------------------------------------
+	1、关闭客户机
+	2、选中需要克隆的客户机-->右键 -->
+	
+ubuntu网络连接的形式
+---------------------------------------
+	1、桥接
+		将虚拟机当成了一台物理主机，模拟一台物理主机
+	2、NAT
+		Net address transform,网络地址转换
+		VM安装之后回产生两个网卡，V1和V8
+		其中V8是NAT模式专用网卡，会将ip转换为网络地址，
+		这里V8将地址映射到端口上
+	3、Only-host
+		类似于NAT，不能访问外部网络，出于安全考虑
+		
+配置客户机为静态ip
+----------------------------------
+	1、查看NAT的网关
+		网络地址编辑器 -> NAT-->NAT设置 -->查看网关（192.168.124.2）
+	2、查看动态分配id（DHCP	）
+		网络地址编辑器 -> NAT-->DHCP设置 -->起始网段（192.168.124.128），结束网段
+	3、挑选一个ip
+	4、编辑ubuntu的网络配置文件 ens33
+		ip route show	显示网卡名称
+
+		[/etc/network/interface]
+		#iface ens33 inet static
+		iface ens33 inet static
+		address 192.168.124.130
+		netmask 255.255.255.0
+		gateway	192.168.124.2
+		dns-nameservers 114.114.114.114
+		 ---DNS服务，联通dns 114.114.114.114
+		auto eth0ll
+	5、重启网络服务
+		/etc/init.d/networking
+		
+脚本
+-------------------------------------
+	1、第一行，解释器 #!/bin/bash---------使用bash解释
+
+if
+----------------------------------------
+	1、语法
+		if COMMANDS; then COMMANDS; [ elif COMMANDS; then COMMANDS; ]... [ else COMMANDS; ] fi
+	实例
+	#!/bin/bash
+	if [[  $# -lt 1 ]] ;then echo no param !!! ; `exit`; fi
+	for a ; do echo $a > $a.txt ;done
+
+for 
+--------------------
+	0、查看帮助
+	1、语法
+		for Name in word ... ; do Comands ; done
+		例如：
+		for a in 1 2 3 4 ;do echo $a ; done
+		for a in 1 2 3 4 ;do echo $a > ${a}.txt ;done
+		for a ;do echo ${a} > ${a} ;done
+	2、使用for循环打印10个数	
+		
+while
+---------------------------------
+#!/bin/bash
+((count = $#))
+((a=1))
+while (( a <=count )) ;do
+echo $a 
+((a=a+1))
+done
+	
+	
+	
+修改dns
+---------------------------------------------------------------------------	
+可以参阅如下步骤进行修改和调整：
+
+首先需要安装resolvconf服务
+apt install resolvconf
+
+1、修改 /run/resolvconf/resolv.conf
+
+试用
+$ vi /run/resolvconf/resolv.conf
+# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)
+#     DO NOT EDIT THIS FILE BY HAND -- YOUR CHANGES WILL BE OVERWRITTEN
+options timeout:1 attempts:1 rotate
+nameserver 223.5.5.5
+nameserver 223.6.6.6
+2、在网卡配置文件 /etc/network/interfaces 里面添加相应 DNS 服务器地址，比如：dns-nameservers 223.5.5.5 223.6.6.6
+
+试用
+$ vi /etc/network/interfaces
+auto lo
+iface lo inet loopback
+auto eth1
+iface eth1 inet static
+address 112.*.*.131
+netmask 255.255.252.0
+dns-servers 223.5.5.5 223.6.6.6
+up route add -net 0.0.0.0 netmask 0.0.0.0 gw 112.*.*.247 dev eth1
+auto eth0
+iface eth0 inet static
+address 10.*.*.214
+netmask 255.255.240.0
+up route add -net 172.16.0.0 netmask 255.240.0.0 gw 10.*.*.247 dev eth0
+up route add -net 100.64.0.0 netmask 255.192.0.0 gw 10.*.*.247 dev eth0
+up route add -net 10.0.0.0 netmask 255.0.0.0 gw 10.*.*.247 dev eth0
+~
+3、修改 /etc/resolvconf/resolv.conf.d/tail ,然后通过 resolvconf -u 命令进行更新：
+
+试用
+$ vi /etc/resolvconf/resolv.conf.d/tail 
+options timeout:1 attempts:1 rotate
+nameserver 223.5.5.5
+nameserver 223.6.6.6
+root@iZ28ig469cdZ:~# resolvconf -u	

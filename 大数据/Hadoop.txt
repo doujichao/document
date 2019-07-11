@@ -1,0 +1,1692 @@
+bigData
+---------------------------
+	0、分布式
+		有分布在不同主机上的进程协同在一起才能构成整个应用
+	1、海量数据
+		1byte=8bit
+		1024B=1M
+		1024M=1G
+		1024G=1T
+		1024T=1P
+		1024P=1E
+		1024E=1Z
+		1024Z=1Y
+		1024Y=1N
+	2、存储
+		分布式存储
+	3、计算
+		分布式计算
+	4、hadoop(一头大象)
+		doug cutting
+		
+优化手段
+----------------------------
+	1、har
+	2、归档
+	3、直接内存访问
+	4、压缩
+	5、串行化		
+		
+查看磁盘使用情况
+hadoop dfsadmin -report		
+
+window运行hadoop程序
+----------------------------------------
+	需要dll,exe文件支持，默认hadoop发布包不含这些文件
+	1、解压bin.war文件到hadoop/bin目录下，替换所有文件
+	2、配置环境变量
+		path=...,
+	
+
+hdfs架构
+----------------------------------
+	运行廉价的的硬件之上，成本较低，访问大型数据集，具有容错的特性，容错机制
+	hdfs是master/slaves架构，有一个名称节点以及多个数据节点构成，nn负责namsepace管理以及client访问
+	
+	namenode	存放元数据（名称，副本树，权限，块列表），不包含数据在那些数据节点上
+				开始的时候，名称节点会像数据节点发送信息，数据节点会将自己所包含的信息返回名称
+				节点，名称节点会在本地内存中创建数据与数据节点之间的映射
+	rack aware策略
+	--------------------------
+		
+		
+
+使用oiv和oev查看namenode的镜像文件和编辑日志文件
+---------------------------------------------------
+	hdfs oiv -p XML -i 本地文件 -o 目标目录
+	hdfs oev -p XML -i 本地文件	-o 目标目录
+
+
+增加一个数据节点
+----------------------------
+	1、克隆要给节点
+	2、启动新节点
+	3、修改新克隆的ip和主机名
+		[etc/hostname] u006
+		[etc/network/interfaces] ip地址
+	4、修改s100的/etc/hosts文件，然后分发
+		[/etc/hosts]
+	5、生成密钥对文件
+		ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa.pub
+	6、修改slaves文件（或workers文件），在分发
+		
+		
+		
+		
+查询集群的配置属性
+----------------------------
+	hdfs getconf		//查询属性
+	
+Hadoop
+-------------------------------
+	0、可靠，可伸缩，分布式计算的开源软件
+	hadoop是分布式计算大规模数据集框架，使用简单编程模型，可从单个服务器扩展到几千台主机，每台主机
+	都提供了本地计算和存储，不需要使用硬件来获取高可用性，类库在应用层处理检测并处理故障，因此在集
+	群之上获取HA服务
+		99.999%
+	1、HDFS
+		hadoop distributed file system.	GFS	
+	2、去IOE
+		IBM + Oracle + EMC
+	3、MapReduce
+		MR		//映射和化简，编程模型
+	4、推荐	
+		
+big data 4V
+----------------------------------
+	1、Volumn		//体量大
+	2、Variaty		//样式多
+	3、Velocity		//速度快
+	4、Valueless	//价值密度低
+	
+	hadoop安装
+	---------------------------
+		1、安装jdk
+			a、复制jdk到Linux
+			b、tar开
+			c、移动到home目录
+			
+				[创建符号连接]
+				ln -s /soft/jdk-XXX	jdk
+			d、配置环境变量
+				PATH="....:/soft/jdk/bin"
+				JAVA_HOME=/soft/jdk
+			e、使环境变量即可生效：source /etc/environment
+		2、安装hadoop
+			a、复制并tar开 hadoop.tar.gz
+			b、创建符号连接
+				ln -s /soft/hadoop/hadoop-xxx hadoop9
+			c、添加到环境变量
+				HADOOP_HOME=/soft/hadoop9
+				PATH="...:/soft/hadoop9/bin:/soft/hadoop9/sbin"
+				
+hadoop包含三个模块
+------------------------------------
+	1、hadoop Common:支持其他模块的工具
+	2、Hadoop Distributed File System:(存储)
+		分布式文件系统，提供了对应用程序数据的高吞吐量访问
+		[进程]
+		NameNode				//名称节点--NN		(存放目录的地方)
+		DataNode				//数据节点--DN		(存放数据的地方)
+		SecondaryNameNode		//辅助节点--2ndNN	(备份目录的地方)
+	3、Hadoop YARN：作业调度与集群资源管理框架(计算)
+		yet another resource negotiate
+		[进程]
+		ResourceManager			//资源管理器--RM
+		NodeManager				//节点管理器--NM
+	4、Hadoop MapReduce:
+		基于yarn系统的对大数据集进行并行处理技术。
+		
+linux文件系统
+	类似于Linux：逻辑上的
+	hadoop存储的次数是3次，每个文件可以存多个副本，副本数量可以定制
+	
+
+配置hadoop
+---------------------------
+	0、默认端口8020
+	1、Standalone/local（默认）
+		独立模式/本地模式、使用本地文件系统
+		所有的程序运行在一个JVM中，不需要启动hadoop的进程，应用的文件系统就是本地文件系统
+		nothing!!!
+		查看文件系统的方式:
+			hadoop fs -ls
+		没有启动任何java进程
+		
+		主要用于测试和开发环境
+		
+	2、Pseudodistributed
+		伪分布模式
+		配置过程，类似于完全分布式，但是只有一个节点
+		[配置xml文件格式]
+		
+		a、core-site.xml 配置hdfs文件系统
+			<?xml version="1.0" ?>
+			<configuration>
+			<property>
+			<name>fs.defaultFS</name>
+			<value>hdfs://localhost/</value>
+			</property>
+			</configuration>
+		b、hdfs.site.xml，配置副本数
+			<configuration>
+				<property>
+				<name>dfs.replication</name>
+				<value>1</value>
+				</property>
+			</configuration>
+			
+		c、mapred-site.xml 配置yarn框架
+		<configuration>
+			<property>
+			<name>mapreduce.framework.name</name>
+			<value>yarn</value>
+			</property>
+		</configuration>
+		d、yarn-site.xml
+		<configuration>
+			<property>
+				<name>yarn.resourcemanager.hostname</name>
+				<value>localhost</value>
+			</property>
+			<property>
+				<name>yarn.nodemanager.aux-services</name>
+				<value>mapreduce_shuffle</value>
+			</property>
+		</configuration>
+		e、配置ssh	安全：私钥加密，公钥解密
+			安全登陆；配置无秘登陆
+			1、安装ssh
+			2、生成密钥对
+				ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
+				cd ~/.ssh   		//查看生成的公私密钥
+			3、导入公钥数据到授权库中
+				cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+			4、登陆到localhost
+				ssh localhost
+			5、格式化hdfs文件系统
+				hadoop namenode -format
+			6、启动所有进程
+				start-all.sh
+			7、查看进程
+				ps -Af | grep ssh
+				jps
+			8、	创建文件系统
+				hadoop fs -mkdir -p /user/ubuntu/data
+				hadoop fs -ls -R 				//-lsr
+			
+	3、Fully distributed mode
+		完全分布模式
+			1、准备5台客户机，安装jdk
+			2、配置环境变量
+				JAVA_HOME
+				PATH
+			3、安装hadoop
+			4、配置环境变量
+				HADOOP_HOME
+				PATH
+			5、安装ssh
+			6、配置文件的编写
+				[/soft/hadoop/etc/hadoop/core-site.xml]
+				fs.defaultFS=hdfs://u001/
+				<?xml version="1.0" ?>
+<configuration>
+	<property>
+		<name>fs.defaultFS</name>
+		<value>hdfs://u001/</value>
+	</property>
+	<property>
+	  <name>hadoop.tmp.dir</name>
+	  <value>/home/ubuntu/hadoop</value>
+	</property>
+</configuration>
+------------------------------------------------------------------				
+				
+				[/soft/hadoop/etc/hadoop/yarn-site.xml]
+				yarn.resourcemanager.hostname=u001
+<configuration>
+	<property>
+		<name>yarn.resourcemanager.hostname</name>
+		<value>u001</value>
+	</property>
+	<property>
+		<name>yarn.nodemanager.aux-services</name>
+		<value>mapreduce_shuffle</value>
+	</property>
+</configuration>
+				
+
+---------------------------------------------------------------
+
+			mapred-site.xml 配置yarn框架
+<configuration>
+	<property>
+	<name>mapreduce.framework.name</name>
+	<value>yarn</value>
+	</property>
+</configuration>
+
+---------------------------------------------------------		
+				[/soft/hadoop/etc/hadoop/hdfs-site.xml]
+				
+<configuration>
+	<property>
+	<name>dfs.replication</name>
+	<value>3</value>
+	</property>
+	<property>
+	<name>dfs.namenode.secondary.http-address</name>
+	<value>u002:50090</value>
+	</property>
+</configuration>
+				
+				第二名称节点配置
+				dfs.namenode.secondary.http-address=u002:50090
+-------------------------------------------------------------------
+				重要
+				
+				[/soft/hadoop/etc/hadoop/slaves]
+				注意：hadoop3.0之后slaves 文件 更名为 workers
+				u003
+				u004
+				u005
+			7、在集群上分发以上文件	
+				cd /soft/hadoop/etc/hadoop/
+				xsync core-site.xml
+				xsync yarn-site.xml
+				xsync slaves
+				
+			
+scp实现两个远程主机之间的文件参数
+---------------------------
+	1安全远程文件复制程序，基于ssh
+	符号链接编程转换变成文件
+	scp -r hello.txt	ubuntu@u003:/user/ubuntu/xx.txt			//push推送
+	scp -r ubuntu@u003:/user/ubuntu/xx.txt	hello.txt			//pull下载
+	scp -r -3 ubuntu@u003:/user/ubuntu/xx.txt	ubuntu@u004:/user/ubuntu/xx.txt		//两个远程主机之间的文件传输
+	-3是通过本地主机中转实现两个远程主机的文件传输
+	
+rsync
+==-------------------------
+	-rl
+	
+	主要用于备份和镜像
+	支持连接，设备等等
+	速度快，避免复制同样的文件
+	
+distcp
+---------------------------------
+	实现两个hadoop集群之间的递归数据复制
+		hadoop distcp hdfs://u001:8020/user/ubuntu/hello.txt hdfs://u003:8020/user/ubuntu/hello.txt
+
+安装ssh
+--------------------------------
+	1、禁用wifi
+	2、关闭防火墙
+	3、修改软件源	/etc/apt/sources.list
+	
+hadoop进程处理
+--------------------------
+	1、查看hadoop进程个数（5）
+		jps	
+			NN
+			DN
+			2NN
+			RM
+			NM
+	2、如果进程数不对，杀死所有进程
+		stop-all.sh
+	3、重新格式化
+		hadoop namenode format
+	4、启动所有进程
+		start-all.sh
+	5、jps	
+	
+UDP
+-------------------
+	user datagram protocal,用户
+	0.0.0.0：通配所有的地址
+	255.255.255.255：广播地址
+	
+首次启动hadoop
+----------------------
+	1、格式化文件系统
+		hadoop namenode -format
+	2、启动所有进程
+		start-all.sh
+	3、查询进程
+		jps
+	4、停止所有进程
+		stop-all.sh
+
+使用webui访问hadoop hgfs
+---------------------------------
+	1、hdfs webui
+		http://localhost:50070/
+	2、data nodemanager		
+		http://localhost:50075/
+	3、	2nn
+		http://localhost:50090/
+		
+		
+folder / path
+/user/ubuntu/data/...	
+
+自定义脚本,在集群上分发文件
+---------------------------
+	循环复制文件到所有节点的相同目录下
+	rsync -rvl /home/ubuntu ubuntu@u100:/home/
+	
+	[/usr/local/bin/xsync]
+	#!/bin/bash
+	pcount=$#;
+	if((pcount < 1));then
+		echo no args;
+		exit;
+	fi
+
+	#
+	p1=$1;
+	fname = `basename $p1`
+	#获得上级目录的绝对路径
+	pdir=`cd -P $(dirname $p1);pwd`
+	echo $pdir
+	
+	cuser=`whoami`
+	
+	#循环
+	for((host=1;host<6;host=host+1));do 
+		echo $pdir/$fname $cuser@u00$host:$pdir
+		#rsync -rvl $pdir/$fname $cuser@u00$host:$pdir;
+	done
+
+编写/usr/local/bin/xcall脚本，在所有主机上执行相同的命令
+-------------------------------------------------------
+	xcall rm -rf /soft/jdk
+
+	循环复制文件到所有节点的相同目录下
+	rsync -rvl /home/ubuntu ubuntu@u100:/home/
+	
+	[/usr/local/bin/xsync]
+#!/bin/bash
+pcount=$#;
+if((pcount < 1));then
+	echo no args;
+	exit;
+fi
+
+#循环
+for((host=1;host<6;host=host+1));do 
+	echo ------------------开始执行u00$host命令--------------------
+	ssh u00$host $@
+	echo ------------------完成-----------------------
+	#rsync -rvl $pdir/$fname $cuser@u$host:$pdir;
+done
+
+整理hadoop的所有类库和配置文件
+--------------------------------------
+	1、解压缩hadoop-2.9解压
+	2、整理jar包
+	3、抽取所有配置文件
+		[core-default.xml]
+		hadoop-common-2.9.2.jar!/core/default.xml
+		[hdfs-default.xml]
+		hadoop-hdfs-2.9.2.jar!/hdfs/default.xml
+		[yarn-default.xml]
+		hadoop-yarn-api-2.9.2.jar!/yarn/default.xml
+		[mapreduce-default.xml]
+		hadoop-mapreduce-client-core-2.9.2.jar!/mapreduce-default.xml
+	4、格式化文件系统
+		hadoop namenode -format
+	5、启动所有进程
+		start-all.sh
+		
+考察本地文件内容
+---------------------------
+	1、u001
+		
+	
+
+修改本地的临时目录
+----------------------------------------------------
+		1、hadoop.tmp.dir
+			[core-site.xml]
+			hadoop.tmp.dir=/home/ubuntu/hadoop
+			<property>
+			  <name>hadoop.tmp.dir</name>
+			  <value>/home/ubuntu/hadoop</value>
+			</property>
+		2、分发core-site.xml
+		3、stop-all.sh
+		4、格式化名称节点
+			hadoop namenode -format
+		5、启动所有进程	
+		
+查看hadoop集群配置属性
+---------------------------------------
+	hadoop getconf
+	
+hadoop集群启动是首先进入安全模式
+=----------------------------------------------
+	如果集群处于安全模式，不能执行重要操作（写操作）
+	集群启动完全后，自动退出安全模式
+	1、安全模式操作
+		hdfs dfsadmin -safemode	get   //查看安全模式
+		hdfs dfsadmin -safemode	enter //进入安全模式
+		hdfs dfsadmin -safemode	leave //退出安全模式
+		hdfs dfsadmin -safemode	wait  //等待安全模式
+		get enter leave wait
+		
+保存名称空间/融合镜像和编辑日志
+---------------------------------------------
+	1、进入安全模式
+		hdfs dfsadmin -safemode enter
+	2、进行保存
+		hdfs dfsadmin -saveNamespace
+	3、退出安全模式
+		hdfs dfsadmin -safemode leave
+		
+一致性模型
+--------------------------------------------
+	读写是否立即可见
+	写入数据时，如果希望数据被其他client立即可见，调用如下方法
+	FSDataOutputStream.hflush();	//清理客户端数据，立即可见
+	FSDataOutputStream.hsync();		//
+	FSDataOutputStream.sync();		//已经不被推荐使用
+	
+归档文件
+---------------------------------------------
+	[归档文件]
+	archive					//归档
+	归档成一个叫做xxx.har的文件夹，该文件夹下有相应的数据文件，xxx.har是一个归档文件
+	hadoop archive -archiveName myarchive.har -p /user/ubuntu  /user/my
+	
+	[查看归档]
+	hdfs dfs -ls -R har://user/my/myhar.har
+	
+	[解归档]
+	hdfs dfs -cp har:///user/my/myhar.har /user/your
+	
+	
+window下磁盘检查的命令
+-------------------------------------
+		chkdsk
+	
+数据完整性
+----------------------------
+	1、一般校验没有纠错机制
+	2、校验和对制定的字节数进行校验，由io.bytes.per.chechsum配置
+		io.bytes.per.chechsum=512 ，不能大于io.file.buffer.size=4096
+	3、数据写入hdfs的datanode管道时，由最后一个节点负责校验
+	4、datanode在后台开启守护线程-----DataBlockScanner
+	
+压缩解压缩
+-----------------------------------
+	ZipInputStream 			//解压缩
+	ZipOutputStream			//压缩
+	ZipEntry				//压缩条目
+	
+压缩格式
+-1			//fast,时间优先
+-9			//best,空间优先
+--------------------------
+	格式				工具			算法                  文件拓展名          是否可截割
+	1、Deflate			无				deflate	               .deflate				否
+	2、GZIP				gzip	        deflate                .gz                  否
+	3、BZIP2			bzip2			bzip2                  .bz2                 是
+	4、LZO              lzop            lzo                    .lzo                 否
+	5、LZ4              无              lz4                    .lz4                 否
+	6、Snappy           无              snappy                 .snappy              否
+	
+codec
+-----------------------------
+	编码
+	
+decodec
+------------------------
+	解码
+	
+在ubuntu上安装eclipse
+--------------------------------------------
+	1、下载
+	2、tar开到ubuntu
+		tar -xzvf eclipse-xxx.tar.gz
+	3、创建一个符号连接
+	4、配置环境变量
+		/etc/environment 
+		source /etc/environment使环境变量立即生效
+	5、后台启动
+		eclipse & 
+	6、把hadoop/lib/native/*复制到/lib目录下，能够成功加载
+	
+	
+测试压缩和解压缩的时间，压缩空间
+----------------------------------
+	算法			压缩空间		压缩时间		解压缩时间
+	deflate 
+	GZIP 
+	BZIP2	
+    LZO    
+    LZ4    
+    Snappy 
+	
+	空间：Bzip2 > Deflate > Gzip >LZ4
+	压缩时效：Lz4 > gzip > deflate >bzip2
+	解压缩时效：lz4 > gzip > deflate > bzip2
+	
+使用hadoop的checknative命令检查本地库安装情况
+------------------------------------------------------
+1、命令	
+	检查本得库是否安装完成 hadoop checknative -a
+		hadoop:  true /soft/hadoop/lib/native/libhadoop.so.1.0.0
+		zlib:    true /lib/x86_64-linux-gnu/libz.so.1
+		zstd  :  false 
+		snappy:  false 
+		lz4:     true revision:10301
+		bzip2:   true /lib/x86_64-linux-gnu/libbz2.so.1
+		openssl: false Cannot load libcrypto.so (libcrypto.so: cannot open shared object file: No such file or directory)!
+		ISA-L:   false libhadoop was built without ISA-L support
+		
+安装lzo-2.06版
+----------------------------
+	注意：该版本安装测试ok
+	1、下载并tar开
+	2、编译并安装lzo库
+		> ./configure --enable-shared
+		> make 
+		> make check 
+		> make test
+		> make install
+	3、检查是否生成lzo库文件
+		find /usr/local/lib | grep lzo
+		
+安装hadoop-lzo-master
+-------------------------------------------
+	1、下载安装hadoop-lzo-master
+	2、需要jdk1.6+(非mac)，jdk1.7
+	3、安装lzo库
+		略
+	4、编译hadoop-lzo-master
+		> C_INCLUDE_PATH=/usr/local//include		//设置lzo-2.06的头文件目录
+		> LIBRARY_PATH=/usr/local/lib/
+		> mvn clean package
+		> 出现lzo共享库找不到，将liblzo2.so.xxx文件复制到/lib目录下
+			> rsync /usr/local/lib/*lzo* root@u000:/lib
+		> 重新mvn clean package
+		
+		
+在hadoop项目中集成hadoop-lzo-master的jar包
+---------------------------------------------------
+	1、复制生成的jar包到项目的lib目录下
+		cp target/hadoop-lzo-xxx.jar ~/workspace/hadoop/lib
+	2、刷新项目	
+	3、并将项目放到bulidpath中
+		
+maven的安装和使用
+-------------------------------------------
+	1、下载并解压apache-maven-3.tar.gz
+	2、创建符号连接
+		cd /soft/
+		ln -s apache-maven-..
+	3、配置环境变量
+		/etc/environment
+		M2_HOME=/soft/maven
+		PATH=..:/soft/maven/bin
+		
+maven项目package时跳过测试
+---------------------------------------
+	1、mvn -DskipTests=true
+	2、mvn -Dmaven.test.skip=true
+	3、pom.xml
+		配置skipTests属性为true
+	4、使用antrun实现文件复制	
+		
+		
+在宿主机上搭建maven本地仓库服务器
+--------------------------------------------
+	1、安装tomcat
+	2、安装nexus.war文件	
+		1、复制nexus.war到${tomcat_home}/webapp
+		2、启动tomcat
+		3、进入http://localhost:8080/nexus/
+	3、配置maven的settion.xml文件，连接到本地仓库服务器
+		注意：maven安装在ubuntu上
+		nexus安装在window上
+		<?xml version='1.0' encoding="utf-8"?>
+		<settings xmlns="http://maven.apache.org/SETTING/1.0.0"
+				xmlns:xsi="http://www.w3/org/2001/XMLSchema-instance"
+				xsi:schemaLocation="http://maven.apache.org/SETTING/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+			<pluginGroup></pluginGroup>
+			<proxies></proxies>
+			<servers>
+				<server>
+					<id>releases</id>
+					<username>doujichao</username>
+					<password>q15937116841</password>
+				</server>
+				<server>
+					<id>snapshots</id>
+					<username>doujichao</username>
+					<password>q15937116841</password>
+				</server>
+				<mirrors>
+					<mirror>
+						<id>nexus</id>
+						<mirrorOf>*</mirrorOf>
+						<url>http://192.168.124.12:8080/nexus/content/group/public</url>
+					</mirror>
+				</mirrors>
+				<profiles>
+					<profile>
+						<id>nexus</id>
+						<repositories>
+							<repositorie>
+								<id>central</id>
+								<url>http://192.168.124.12:8080/nexus/content/repositories/central</url>
+								<releases>
+									<enable>true</enable>
+								</releases>
+								<snapshots>
+									<enable>true</enable>
+								</snapshots>
+							</repositorie>
+						</repositories>
+						<pluginRepositories>
+							<pluginRepository>
+								<id>central</id>
+								<url>http://192.168.124.12:8080/nexus/content/repositories/central</url>
+								<releases>
+									<enable>true</enable>
+								</releases>
+								<snapshots>
+									<enable>true</enable>
+								</snapshots>
+							</pluginRepository>
+						</pluginRepositories>
+					</profile>
+				</profiles>
+			</servers>
+			<activeProfiles>
+				<activeProfile>nexus</activeProfile>
+			</activeProfiles>
+		</settings>
+		
+		
+配置maven本地仓库服务器的配置
+-----------------------------------------------
+	1、编辑tomcat/webapp/nexus/WEB-INF/classes/nexus.propreties
+		nexus-work=h:/maven-repo/nexus
+		runtime=${bundleBasedir}
+		nexus-app=${runtime}
+		
+		
+配置snappy压缩编解码器		
+------------------------------
+	0、特点
+		快：压缩250M/s，解压缩500M/s
+		稳定（stable）：字节流在版本之间不会改变
+		鲁棒性（Robust）：在恶意输入时解压缩不会出现崩溃
+		免费和开源：
+	1、通过apt-get安装snappy
+		sudo apt-get install libsnappy
+	2、查看安装so文件库
+		ls /usr/lib/x86_64-linux-gnu/libsnappy.so.1			/lib 和 /usr/lib时可信位置，不需要另行配置
+	3、运行java程序	
+
+maven基础
+----------------------------------------
+	1、pom
+		project object model,项目对象模型
+	2、mvn help:system
+		mvn help:system			//输出环境变量，下载help插件到本地仓库中
+	3、eclipse继承maven插件
+		已经集成了
+	4、配置maven插件
+		eclipse --> window --> 首选项 -> maven -> user setting -> 右侧进行设置
+		user setting 	:/soft/maven/conf/setting
+		local repository:/home/ubuntu/.m2/repository
+	5、使用maven
+		a)创建hello-world项目所在文件夹
+		b)在hello-world文件夹下创建pom.xml文件
+		c)创建文件夹
+			cd hello-world
+			mkdir -p /src/main/java
+		d)创建helloWorld.java文件
+		e)在pom.xml文件所在目录运行mvn clean complie
+		mvn clean 删除项目下的target目录文件
+		f)创建测试目录
+			mkdir src/test/java
+		g)执行mvn clean test
+		h)执行package命令打包
+			mvn clean package
+		 
+		 
+maven常用命令
+--------------------------------
+	mvn clean 		//删除target目录
+	mvn test		//测试
+	mvn compile		//编译
+	mvn package		//打包
+	mvn install 	//安装到本地仓库中
+	
+	mvn archetype:generate	//生成项目的maven的骨架
+		输入groupId
+		输入aritfactId
+		输入version
+		
+maven依赖项的范围
+-------------------------------------------
+	1、compile		
+		默认。编译、测试、运行
+	2、test
+		测试
+	3、provided
+		编译测试有效，运行无效
+	4、runtime
+		测试和运行有效，编译无效
+		
+Writable
+------------------------------------
+	
+		
+文件格式
+---------------------
+	1、txt
+		纯文本格式、若干行记录
+	2、	SequenceFile
+		key-value		//map
+		
+SequenceFile格式
+---------------------------
+	header + records
+	SEQ + version + key .class + value class+ codec 
+	压缩类型：NONE | Recored（Value） | Block （Record）
+	可以切割（sync点）
+	
+MapFile
+------------------------------
+	是排序的seqfile,具有索引
+	index(seq)+data(seq)
+	要求key按照大小顺序添加
+	index：索引和偏移量（seq）,可以设置间隔，默认128
+		通过io.map.index.interval进行设置间隔值，进行折半查找
+	data：key-value
+	
+	index 1-128 129-...
+	
+ArrayFile
+----------------------------
+	key		:index
+	value	:value
+
+SetFle
+------------------------------------
+	key 	:WritableComparable
+	value	:null
+	
+序列化（串行化）
+------------------------------
+	将对象转换为byte[]
+	JVM
+	java.io.Serializable
+	
+	ObjectObjectStream/ObjectInputStream
+	ByteArrayOutputStream/ByteArrayInputStream
+	装饰流
+	
+IPC ：
+--------------------------------------
+	进程间通讯：inter process communication
+	
+	
+RPC
+------------------------------------
+	远程过程调用：remote procedure call
+	
+hadoop序列化
+------------------------
+	没有元数据，数据见是独立的，数据量小，两边都需要知道数据顺序
+	精简
+	1、Writable
+	2、IntWritable+Text+LongWritbale
+	3、DataOutputStream
+	4、Text				//java.lang.String
+	
+java 串行化
+---------------------------
+	由元数据（数据类型）写入，数据量比较大，数据见不是独立的，存在相互引用的情况，不能相互颠倒
+	
+	
+	
+hadoop自己的序列化格式：Writable
+----------------------------------------
+	序列化接口
+	public interface Writable {
+		串行化过程
+		void write(DataOutput out) throws IOException;
+		反串行化过程
+		void readFields(DataInput in) throws IOException;
+	}
+	
+IntWritable
+------------------------
+	implemets WritableComparable{
+		writer()
+		readFields();
+		compareTo(IntWritable o){
+		}
+		
+		Comparator xx=new ..{
+			compare(byte[] , byte [])
+		}
+	}
+	
+DataOutputStream
+----------------------------------
+	1、writeUTF("xxx")
+		采用utf-8存放数据，个数在1，2，3之间
+	2、writeBytes()
+		每个字符只写入一个字节
+	3、writeChars('xxxx')
+		每个字符两个字节（unicode编码）
+			char c='\u0000'
+		读取的是由readChar()只能读取一个字符	
+	4、ArrayWritable
+	5、MapWritable
+	6、NullWritable
+		没有串行化和反串行化过程，不涉及数据操作，和网络传输，仅仅是一个占位符
+		单例模式（饿汉式）
+		
+java对象串行化	ObjectOutputStream/ObjectInputStream
+Writable	DataOutputStream/DataInputStream
+
+secondaryNameNode
+-----------------------------------------
+	1、辅助名称节点
+		2ndNN
+	2、oiv
+		off image viewer
+	3、oev
+	4、创建检查点过程
+		a)nn上执行编辑日志滚动，产生新的编辑日志
+		b)2nn复制nn的image+edits
+		c)2nn进行融合
+		d)2nn将新的image发送回nn
+		e)nn重命名新的image，替换old即可
+	5、2nn创建检查点的周期
+		a)1小时执行一次
+		dfs.namenode.checkpoint.period=3600		//秒数
+		b)edits文件超过64M，出发检查点生成
+			2nn没5分钟检查一次
+			
+			最小副本数
+			dfs.namenode.replication.min
+			
+			
+hdfs dfsadmin
+------------------------------
+	[条件]
+		a、对目录进行设置
+		b、值必须是正整数
+		c、具有管理员权限
+	1、设置配额
+		[目录配额]
+			控制的目录所有文件/文件夹的个数，1表示空目录
+			包含子文件夹。
+			hdfs dfsadmin -setQuota 1 /user/ubuntu/data			//设置配额
+			hdfs dfsadmin -clrQuota /user/ubuntu/data			//清除配额
+
+		[空间配额]
+			副本数计算在内，控制的所有文件总大小
+			值至少大于384m，磁盘空间最少消耗384m，
+			hdfs dfsadmin -help setSpaceQuota						//查看空间配额帮助
+			hdfs dfsadmin -setSpaceQuota 385m /user/ubuntu/data		//设置空间配额
+			hdfs dfsadmin -clrSpaceQuota  /user/ubuntu/data			//清楚空间配额
+	2、快照
+		快照相当于对目录做一个备份，并不会立即复制所有文件，而是指向同一个文件。
+		当写入发生时，才会产生新文件
+		hdfs dfs -help createSnapshot							//查看快照
+		hdfs dfs -createSnapshot  /user/ubuntu/data				//对目录创建一个快照
+		hdfs dfsadmin -allowSnapshot	/user/ubuntu/data	 	//开启指定目录的快照功能，默认不允许
+		hdfs dfsadmin -disallowSnapshot	/user/ubuntu/data	 	//禁用指定目录的快照功能，默认为禁用
+			hdfs://u000:8020/user/ubuntu/data/.snapshot/xxx		//快照文件和源文件使用相同的数据块
+			
+		hdfs dfs -createSnapshot /user/ubuntu/data xpc...		//指定名称命名快照
+		hdfs dfs -renameSnapshot	data  原名称  现在名称		//重命名快照
+		
+		hdfs lsSnapshottableDir			//列出当前用户所有可快照目录
+		hdfs snapshotDiff				//比较两个快照目录的不同之处
+		
+	3、回收站
+		trash，对应一个文件夹
+		fs.trash.interval=0			 	//分钟数，0表示禁用，删除文件的存活时间
+		fs.trash.checkpoint.interval	//检查回收站的间隔时间, 应该 <= 存活时间
+		                    internal
+		1、启用回收站
+			[core-site.xml]
+			fs.trash.interval=1
+			
+		2、分发到集群，立即生效不需要进行重启hadoop	
+		
+	4、修改hdfs的webui的静态用户的名称
+		[core-site.xml]
+		hadoop.http.staticuser.user=ubuntu
+		
+大数据
+---------------------------------
+	1、存储hdfs:hadoop distributed file system . GFS
+		分布式存储
+	2、运算
+		分布式运算
+		MapReduce				//映射 + 化简 .编程模型
+		Key - Value
+	
+
+	
+job提交过程
+------------------------------
+	1、main --> job.waitForCompletion()
+	2、submit()
+		a)确保状态
+		b)使用新型API
+		c)connect()		//创建cluster对象
+		d)创建jobSubmitter.submitJobInternal()
+			1)检查输出目录
+			2)确立hdfs的临时目录
+			3)取得本地ip
+			4)创建jobID
+			5)copyAndConfigureFiles	//使用命令行参数设置config信息
+			6)int maps=writeSplits()	//在临时目录下创建切片文件
+			7)setConf(maps,map)	//设置map任务数量
+			8)writeConf(..)	//提交job.xml到提交目录
+			9)LocalJobRunner.submitJob()
+		
+		LocalJobRunner.Job对象（Job extends Thread）	
+			1、通过临时目录下的job.xml创建jobConf对象
+			2、启动线程
+				1）得到切片信息SplitTaskMetaInfo
+				2）得到reduce任务数
+				3）getmapTaskRunnables()	//得到mapper对应的runnable
+				4）runTask
+				5）getReduceTaskRunnables
+				6）runTasks
+				
+		LocalJobRunner.Job.MapTaskRunnable
+			run(){
+				1、创建MapAttemptId
+				2、创建map=MapTask(splitInfo,job.xml)
+				3、创建MapOutFile
+				4、map.setXXX
+				5、map.run
+			}
+			
+		MapTask
+			run(){
+				runNewMapper(...)
+			}
+		runNewMapper(){
+			1、创建taskContext对象
+			2、通过反射创建自定义的Mapper对象
+			3、创建InputFormat
+			4、重建Split
+			5、创建NewOutputCollector	
+			6、mapperContext
+			7、mapper.run(mapperContext)				///这里是自定义类的父类，父类调用子类的map方法
+			}
+
+client --> Job.submit() --> jobSubmittor.submitJobInternal() --> JobRunner.submitJob()	
+
+MapReduce:Job	
+
+Mapreduce作业执行过程
+----------------------------------------
+	1、编写源代码
+	2、到处jar包
+	3、上传到ubuntu
+	4、在ubuntu上提交job
+		hadoop jar xxx.jar 输入路径	输出路径
+	5、window上无法提交作业给ubuntu
+		
+		遇到报错：Error: Could not find or load main class org.apache.hadoop.mapreduce.v2.app.MRAppMaster
+		解决：在mapred-site.xml中添加
+			<property>
+			  <name>yarn.app.mapreduce.am.env</name>
+			  <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+			</property>
+			<property>
+			  <name>mapreduce.map.env</name>
+			  <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+			</property>
+			<property>
+			  <name>mapreduce.reduce.env</name>
+			  <value>HADOOP_MAPRED_HOME=${HADOOP_HOME}</value>
+			</property>
+
+	
+eclipse中maven项目需要查看源代码时，项目不能正常下载可以使用手动命令强行下载
+---------------------------------------------
+	mvn dependency:sources -DdownloadSources=true
+	
+启动NameNode程序的JVM远程调试
+----------------------------------
+	1、要先启动hadoop集群，在设置该变量，否则启动集群会一直等待
+	2、设置HADOOP_CLIENT_OPTS="-agentlib:jdwp=transport=dt_socket,
+								server=y,suspend=y,address=8000"
+	3、到处eclipse程序的jar文件发送到集群上准备运行
+	4、在集群上运行jar程序，会发现地址不动，因为在等待远程调试器进行连接，
+		start.dfs.sh
+	5、设置程序中的中断点	
+	
+远程调试
+-----------------------------
+	1、查看java远程调试帮助
+		java -agentlib:jdwp=help
+	2、设置java虚拟机的远程调试
+		java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000    //设置java虚拟机远程调试
+	3、给namenode启动时增加jvm的远程调试功能
+		a、修改bin/hdfs启动脚本
+		HADOOP_NAMENODE_OPTS=$HADOOP_NAMENODE_OPTS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000
+		b、在shell当中直接设置环境变量
+			export HADOOP_NAMENODE_OPTS="$HADOOP_NAMENODE_OPTS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000"
+		c、完成远程调试后，关闭远程调试功能
+			export HADOOP_NAMENODE_OPTS=
+	4、启动名称节点
+		hadoop-daemon.sh start namenode
+		
+	[客户端]
+	1、找到namenode类，在main函数上打断点
+	2、eclipse右键调试 -> remote java application
+		项目myhadoop
+		ConnectionType:standard(sockt attach)
+		host:u000
+		port:8000
+	3、调试
+	
+在win和ubuntu上通过远程调试，查看job在hadoop集群上的执行过程
+---------------------------------------------------
+	[远端u000,ubuntu]
+	1、传递jar到ubuntu
+	2、设置HADOOP_CLIENT_OPTS环境变量
+		export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000"
+	3、启动job提交命令
+		hadoop jar xxx.jar com.xxx.App data
+	4、等待客户端发起连接进行测试
+
+	[客户端，win，eclipse]
+	1、在源代码中设置断点
+		main()
+	2、eclipse右键调试 -> remote java application
+		项目myhadoop
+		ConnectionType:standard(sockt attach)
+		host:u000
+		port:8000
+	3、调试	
+	
+MR AM			：MapReduce App Master
+resMgrDelegate	：ResourceManager代理
+
+YARN
+------------------------
+	ResourceManager
+	NodeManager
+	
+google
+------------------------------
+	PB:protocal buffer,协议缓冲区
+	
+RPC
+-----------------
+	google protobuf
+	Remote procedure call,远程过程调用
+	
+YarnRunner作业调用过程 完全分布式
+---------------------------------------------
+	main() --> Job.waitForCompletion() 
+	--> JobSubmitter.submitJobInternal() 
+	--> YarnRunner.submitJob() 
+	--> ReourceMgrDelegate.submitApplication()
+	-->YarnClientImpl.submitApplication() 
+	--> 创建SubmitApplicationRequest 创建请求报文
+	--> ApplicationClientProtocolPBClientImpl.submitApplication(req)
+		SubmitApplicationRequestProto requestProto
+	-->ProtobufRpcEngine$Invoker.invoke() 
+		
+	--> new RpcRequestWrapper(RequestHeaderProto rpcReqHead,Message theRequest)
+	-->ipc.Client.call(RPCKind,reqWrapper)
+	-->Call call=ipc.Client.CreateCall()
+		client.call(RPC.RpcKind.RPC_RPOTOCOL_BUFFER,new RpcRequestWrapper)
+	--> ipc.Client.call()	
+	--> Connection.sendRpcRequest(call)
+	--> 线程池异步调用
+	
+IPC
+---------------------------------------
+	inter process communication ,进程间通讯
+	
+RPC
+------------------------------	
+	remote procedure call,远程过程调用
+	
+考察Hadoop的底层ipc通讯
+----------------------------------
+	1、创建java程序
+		客户端和服务器端
+	启动服务器端和客户端	
+	
+切片大小和block相当
+-----------------------------------
+	优化策略：
+		1、数据本地化优化策略
+		2、机架本地化策略
+		3、不同机架运行任务
+		
+Partition                                                  
+-------------------------	
+	分区
+	
+Combiner
+---------------------------
+	降低map和reduce之间的传输量
+	
+启动mr作业历史服务器进程
+------------------------------------
+	1、启动
+		xcall mr-jobhistoryserver start historyserver
+	2、停止
+		xcall mr-jobhistoryserver stop historyserver
+		
+使用计数器统计信息
+-------------------------------------------------
+	
+	
+修改计数器的上限
+-----------------------------------
+	1、修改集群配置
+		[mapred-site.xml]
+		mapreduce-job.counters.limit=2000
+		
+wordcount
+--------------------------------------
+	单词统计
+	空格分割的单词
+	
+[wc.txt]
+hellow world tom 
+hello tom world 
+world hello tom
+how are you yes 
+find thank your
+
+mr
+--------------------------------
+	[map]
+	提取每一行，String[] arr = line.split(" ");
+	for(String str :arr){
+		context.write(new Text(word,new IntWritable(1)));
+	}
+	
+	[reduce]
+	key  --> 迭代，计算总数
+	
+修改dfs的文件块大小
+---------------------------------------
+		<property>
+		  <name>dfs.blocksize</name>
+		  <value>134217728</value>
+		</property> 
+		
+hadoop的切片（split）计算法则
+----------------------------------------------
+	是否能够切割
+	splitMax=Long.MaxValue
+		可通过mapreduce.input.fileinputformat.split.maxsize设置
+	splitMin=1
+		可通过mapreduce.input.fileinputformat.split.minsize设置
+	blocksize=512	
+		可通过dfs.blocksize=128M
+	max(min,min(clock,max)):切片取值为中间值	
+	
+	
+	
+conf可以设置map的任务数----这个不好使，源码中重新设置了
+------------------------------
+	conf.set("mapreduce.job.maps",xxx)
+	JobSubmitter.setNumMaps(...);
+	
+	
+conf可以设置reduce数
+------------------------------
+	conf.set("mapreduce.job.reduces",xxx);//默认值为1
+	job.setNumReduceTasks();
+	
+自定义分区函数需要继承Partitioner.class实现getPartition方法,通过设置job.setPartitionerClass(),设置分区函数
+
+
+输入格式
+InputFormat
+------------------------------------------
+	1、TextInputFormat
+	2、CombineInputFileFormat			//合成文件切片
+		何使处理大量的小（远小于file blocksize）文件
+		
+		
+KeyValueTextInputFormat
+--------------------------------------
+	可以设置文本分隔符，但是分隔符只能是一个字符
+	line1=hello world		//分隔符=，通过mapreduce.input.keyvaluelinerecordreader.key.value.separator
+	
+NLineInputFormat 
+----------------------------------
+	类似与TextInputFormat，Key-Value仍然是LongWritable,Text类型，value不是一行，是N行
+	通过mapreduce.input.lineinputformat.linespermap
+	
+SequenceFileAsText
+MultiInputs
+DBInputFormat
+
+JDBC
+----------------------------
+	1、插入
+		Class.forName("com.mysql.jdbc.Driver");
+		Connection conn=DriverManager.getConnection(url,username,password);
+		conn.autoCommit(false);
+		PreparedStatement ppst=conn,preparedStatement("select * from user where id = ? and ...");
+		ppst.setString();
+		ppst.setInt();..
+		ResultSet rs=ppst.executeQuery();
+		rs.getString();
+		rs.getXXX();
+	2、PreparedStatement
+		ResultSet
+	3、DBInputFormat
+		Key=LongWritbale
+		Value=实现类DBWritable
+		
+		
+		
+DBOutputFormat
+---------------------------------------
+	将结果输出到db中，RecordWriter写入时只是将Key写入db中，而且Key时DBWritable类型
+	
+
+NamdNode                      //NN		hdfs
+DataNode					  //DN		hdfs
+SecondaryNameNode             //2NN		hdfs
+ResourceManager               //RM		yarn
+NodeManager                   //NM		yarn
+AppMaster					  //AM		mapreduce
+	
+Map
+Reduce
+DBWritable
+Writable
+InputFormat
+OutputFormat	
+
+MR执行过程
+-----------------------------------------------
+	hadoop jar xxx.jar xxx.xxx.App agrs...
+	
+	client                         hdfs 
+	        |                     job.xml
+	        |     1               job.jar
+	        |-------->            job.split
+	        |                     job.splitmeta
+--------------		
+	  |		
+	  |2
+	  V
+ResourceManager
+--------------
+	   ^ 
+	|  |  |
+	|3 |4 |5、返回资源列表
+	|  |  |
+	V	  V
+  AppMaster	------------------> NodeManager ----------> Container ----------> Map/Reduce
+--------------  
+
+YARN事件分发原理
+------------------------------
+	MR基于事件，
+	ApplicationMasterLauncher		//启动AM，Running之前，Accepted之后
+	ResourceManager.ApplicationEventDispatcher
+	事件的状态：
+	NEW
+	NEW_SAVING
+	SUBMITTED
+	ACCEPTED
+		ApplicationMasterLauncher.launch		//启动AM
+	RUNNING
+	FINISHED
+		ApplicationMasterLauncher.clearcup
+	
+资源管理器启动远程调试
+--------------------------------
+	1、停掉RM进程
+		yarn-daemon.sh stop resourcemanager
+	2、设置RM的环境变量
+		export YARN_RESOURCEMANAGER_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000   
+	3、启动RM进程
+		yarn-daemon.sh start resourcemanager
+	4、客户端设置断点，远程调试	
+	
+	
+MR
+------------------------
+	Key：必须能够排序，WritableComparable接口
+	
+排序
+-------------------------
+	1、部分排序，按照key
+	2、全排序
+		所有输出文件合并到一起之后，key仍然是有序的
+		a)自定义分区函数
+			计算key的值按照key所在的区间进行分区编号设置
+			需要对数据分布有着全面的认知
+		b)采样器
+			操纵SequenceFile(key-value)
+	3、二次排序
+		key 是有序的，value是无序的
+		Value无法排序，通过key做文章，间接实现对value的排序
+		1、创建组合key
+			(year asc,temp desc)
+		2、创建分区函数，按照年份分区，确保相同year数据进入同一个reduce	
+		3、创建GroupComparator对比器
+		
+连接操作
+---------------------------------
+	JDBC：内连接，外连接（左外连接，右外连接，全外连接），补全
+	1、分布式缓存/直接在reduce从hdfs提取到内存，map
+	
+	
+mr连接查询
+--------------------------------
+	1、一方数据很小，可以加载到内存中
+	2、如果两方数据都是比较庞大
+		使用到了二次排序
+		1、定义组合key
+			ComboKey{
+				compareTo(){
+					看能否是第一个位置
+				}
+			}
+		2、定义分区函数
+		3、定义GroupComparator
+	
+分布式缓存
+---------------------------------
+	1、DistributeCache
+		job.addCacheFile(...)
+		URI[] uris=job.getCacheFile();
+	
+	
+commission/decommission:服役 / 退役
+-------------------------------------------
+	slaves/workers								//仅仅是控制集群操作
+	dfs.hosts 									//文件路径、决定了那些DN能够连接到NN，如果为空，所有主机允许连接
+	dfs.hosts.exclude							//文件路径，决定了那些DN能够连接到NN，如果为空，所有主机都允许连接
+	yarn.resourcemanager.nodes.include-path		//文件路径，决定那些NM能够连接到RM
+	
+	该表表示文件存在的时候的情况，
+include(file,exist,优先级高)	exclude(file,exist)   是否连通
+--------------------------------------
+		NO					        	NO					No
+		NO					       	Yes                 No
+		Yes					       	NO                  Yes
+		Yes					       	Yes                 Yes + 退役
+	
+服役一个新节点过程如下
+-------------------------------------------------
+	0、克隆
+		克隆新节点
+		修改ip地址和主机名
+		hosts文件
+		删除~/hadoop 目录下的文件
+		修改辅助名称节点
+	1、添加新的网络地址到include文件
+		在NN节点上[dfs.hosts属性]
+		/soft/hadoop/etc/hadoop/dfs.hosts
+		
+	2、刷新NN，命令如下
+		hdfs dfsadmin -refreshNodes	-- 刷新节点集合
+	3、刷新RM节点，使用如下命令
+		yarn rmadmin -refreshNodes
+	4、更新slaves/workers文件，以备集群控制脚本将来的操作	
+	5、启动新的节点和节点管理器
+		ssh newNode
+		hadoop-daemon.sh start datanode
+		yarn-daemon.sh start nodemanager
+	6、在webui中检查是否ok	
+	
+退役旧节点
+------------------------------
+	在DN停止前，将数据块复制到其他节点
+	1、添加要退役的旧节点地址到exclude文件中，注意：不要更新include文件
+	2、刷新名称节点NN
+		hdfs dfsadmin -refreshNodes
+	3、刷新RM	
+		yarn rmadmin -refreshNodes
+	4、查看webui，退役节点的状态为（decommission in progress---退役中），复制block到其他节点
+	5、如果退役节点状态为decomissioned，所有块已经复制完成，停止退役节点
+		hadoop-daemon.sh stop datanode
+		yarn-daemon.sh stop nodemanager
+	6、从include文件中删除退役节点，在运行刷新节点的命令
+		[dfs.hosts]文件中删除
+		hdfs dfsadmin -refreshNodes
+		yarn rmadmin -refreshNodes
+	7、从slaves文件删除退役节点	
+	
+	
+HA	
+--------------------------
+	high availability,高可用
+	1、持续提供服务的能力 99.9999%
+	2、single point of failure,SPOF,单点故障
+	
+Fail over
+----------------------
+	容灾
+	
+fault tolerent
+--------------------
+	容错
+	
+HDFS High Availability(HA)
+----------------------------------
+	1、Using the Quorum Journal Manager(QJM)
+	2、NFS Net FileSystem.
+	3、架构
+		配置两个NN，同一时刻只能由一个active节点，另一个是standby待命状态
+		standby的作用是维护足够多的状态数据，以备容灾使用
+		
+		standby和active节点进行同步，两个节点使用单独的守护进程(JournalNodes)进行通讯
+		active对namespace的修改会记录到jn中的主版本中，standby从JN中进行读取，更新本地内存中的状态
+		灾难发生时，standby确保读取了所有的edit数据，在切换成active状态，可以确保名称空间的状态完全同步
+		
+		为了达到快速容灾，取决于standby节点由最新的集群block数据，所有DN配置两个NN，因此block数据和心跳
+		信息都能发送给两个NN
+		
+		脑裂(brain-split):两个NN都处于active状态，JN同一时刻只允许一个NN作为写入器，容灾发生时，
+		成为active的NN接管向JN写入工作，防止其他的active持续写入
+	4、硬件资源(hardware)
+		1、多个NN主机
+		2、多个JN主机
+			Jn时轻量级进程，可以和其他的hadoop进程位于同一台主机上，至少3个JN节点
+		3、注意事项：standby也运行检查点工作，没有必要配置Secondary NN.实际上，也不能配置2nn，否则后报错
+	5、部署
+		nameservice ID 由多个NN构成
+		配置细节[hdfs-site.xml]
+		1、dfs.nameservices
+		名称服务器的逻辑名
+			dfs.nameservice=mycluster
+		2、dfs.ha.namenodes.[nameservice ID]
+			制定该名称服务下有多少个namenode
+			dfs.ha.namenodes.mycluster=nn1,nn2
+			当前最多只支持2个NN 
+		3、dfs.namenode.rpc-address.[nameservice ID].[namenode ID]	
+			dfs.namenode.rpc-address.mycluster.nn1=u000:8020
+			dfs.namenode.rpc-address.mycluster.nn2=u001:8020
+		4、dfs.namenode.http-address.[nameservice ID].[name node ID]	
+		5、dfs.namenode.shared.edits.dir配置JN上编辑日志存放地址
+		6、dfs.client.failover.proxy.provider.[nameservice ID]
+		7、dfs.ha.fencing.methods=sshfence防护方法，配置的时java类或者脚本列表
+		   dfs.ha.fencing.ssh.private-key-files=~/.ssh/id_rsa配置私钥
+		8、fs.defaultFS
+			[core-site.xml]
+			fs.defaultFS=hdfs://mycluster
+		9、dfs.journalnode.edits.dir
+			JN存储edit文件的本地目录
+			
+部署细节
+-------------------------------
+	配置完成后，需要在JN上启动守护进程，执行一下命令
+	$> hadoop-daemon.sh start journalnode
+	启动JN的守护进程后，对两个NN节点在disk-meta上进行同步
+	情况有三：
+		1、搭建全新的HDFS集群，现在其中的一个NN上格式化(hdfs namenode -format) 
+		2、如果已经格式化了NN，或者从非HA转换为HA，需要复制NN的元数据目录到另一个，
+			在未格式化的NN上运行命令 hdfs namenode -bootstrapStandby
+			
+			hdfs --config /soft/hadoop/etc/ha namenode -bootstrapStandby
+			
+			该命令的作用是确保JN包含足够多的编辑日志能够启动两个NN
+		3、如果正在转换费HA，NN到HA的NN，需要运行hdfs namenode -initializeShareEdits命令，
+			该命令会从本地的编辑日志目录初始化JN的目录
+			
+		单独启动NN，通过webui查看状态，初始时都是standby状态
+
+
+管理命令
+-----------------------------
+	hdfs haadmin --help
+
+HA启动过程
+--------------------------------
+	1、启动NN，DN，NM，RM
+	2、启动JN
+		ssh u001 hadoop-daemon.sh start journalnode
+		ssh u002 hadoop-daemon.sh start journalnode
+		ssh u003 hadoop-daemon.sh start journalnode
+	3、复制NN的元数据到standby	
+		scp ~/hadoop/dfs ubuntu@u006:/home/ubuntu/hadoop
+	4、初始化NN的edits的JN
+		hdfs namenode -initializeShareEdits
+		
+		
+使用QJM实现NameNode HA的
+--------------------------------------
+	在Active和standby的NN之间共享edit日志
+	
+ResourceManager HA
+--------------------------------
+
+AVRO
+-------------------------
+	串行化技术
+	java 	 //ObjectOutputStream/ObjectInputStream
+	Writable //DataOutputStream/DataInputStream
+	1、丰富的数据结构
+	2、紧凑、快速、二进制数据格式
+	3、容器文件，持久化数据
+	4、支持RPC(远程过程调用)
+	5、和动态语言整合
+	
+体验avro
+--------------------------
+	1、下载avor
+		avor-tools-1.8.1.jar
+	2、创建schema文件
+		{"namespace": "avro",
+			 "type": "record",
+			 "name": "User",
+			 "fields": [
+				 {"name": "name", "type": "string"},
+				 {"name": "favorite_number",  "type": ["int", "null"]},
+				 {"name": "favorite_color", "type": ["string", "null"]}
+			 ]
+			}
+	3、编译schema，生成Java code
+		java -jar /path/to/avro-tools-1.8.2.jar compile schema <schema file> <destination>
+	4、使用java代码实现avro的串行化
+		
+	5、avro文件时可切割的
+	
+RDBMS
+----------------------------------
+	关系行数据管理系统
+	OLTP：online transaction process
+	a、原子性
+	b、一致性
+	c、隔离性
+	d、永久性
+	
+	低延迟
+	
+事务并发现象
+--------------------
+	1、脏读			//读未提交
+	2、不可重复读	//都不回去
+	3、幻读			//读多了
+	
+事务的隔离级别
+-------------------------
+	1、读未提交
+	2、读已提交
+	3、重复读
+	4、序列化
+	
+HIVE
+--------------------
+	数据仓库软件
+	存储：重在分析，延迟高
+	用来读、写、管理驻留在分布式存储系统上的大型数据集，可以使用命令行和驱动程序
+	运行在hadoop之上，汇集查询数据
+	OLAP:online analyze process
+	不是：
+		关系型数据库
+		OLTP
+		不适合实时查询和底层更新操作
+	特定：
+		在数据库中存放shema，处理数据到HDFS
+		OLAP
+		提供类SQL语言，HQL（HiveQL）
+		可扩展、可伸缩、速度快
+		
+Hive架构
+------------------------------
+	UI（web ui/CLI(命令行)/）
+	MetaStore + HQL QueryEngine
+				Execution Engine
+				MapReduce
+				
+			
+Hive组件
+-----------------------------
+	UI
+	MetaStore				//schema、table、column信息在RDES表中
+	HQL Process Engine		//编写HQL语句
+	Execution Engine		//处理查询，生成结果
+	HDFS
+	
+Hive安装
+-----------------------
+	1、下载并tar开
+	2、配置环境变量
+	
+配置Hive
+-------------------------
+	在[hive_home]/conf/hive-env.sh
+	配置hadoop_home
+	
+配置hive的元数据库
+-----------------------
+	hive使用rdbms存储元数据，内置了derby数据库
+	hive/conf/hive-default.xml.template //hive的默认配置，不要修改，创建hive-site.xml
+	[/soft/hive/apache-hive/confi/hive-site.xml]
+
+使用hive
+--------------------------
+	1、初始化schema库
+		hive/bin/schematool -initSchema -dbType derby
+	2、完成后，在当前目录下创建一个文件夹	

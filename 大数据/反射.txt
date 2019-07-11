@@ -1,0 +1,55 @@
+反射
+
+class
+-----------------------------
+定义关键字
+
+Class
+--------------------------
+	Class类
+	是类的描述符
+	
+Constructor
+-----------------------------
+	构造函数的描述符
+	Class clazz=Person.class
+
+Method
+----------------------------
+	方法描述符
+	Constructor ctor=clazz.getConstructor(...);
+	ctor.setAccessible(true);设置可访问性
+	ctor.newInstance(...);创建新对象
+	
+Field
+-----------------------------
+	字段（成员变量）描述符
+	Field f=clazz.getDeclaredField("name")
+	
+Modifier
+-----------------------------
+	修饰符，判断是否含有指定的修饰符
+	Modifier.isStatic(m.getModifier());
+	
+内省：专业操纵javaBean	
+------------------------------
+	Introspctor:
+	BeanInfo:				//bean信息
+	PropertyDescriptor 		//属性描述符
+	MethodDescriptor		//方法描述符
+	
+设计模式
+-------------------------------------
+	1、单例模式
+	2、工厂模式
+	3、适配器模式
+	4、装饰模式
+		class MyConnectionWrapper extends Connection{
+			private Connection con;
+			public MyConnectionWrapper(Connection conn){
+				this.con=conn;
+			}
+		}
+	5、池化模式
+	6、builder模式
+	7、代理模式

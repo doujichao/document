@@ -1,0 +1,38 @@
+jvm
+-------------------
+	runtime data area，运行时数据区
+	1、method area
+		在所有线程间共享
+	2、heap
+		在所有线程间共享
+		1、young generation（位于堆中）
+			年轻代
+			a、eden区，创建新对象
+			b、survivor-1
+			c、survivor-2
+		2、old generation（位于堆内）
+			年老代
+		3、permenet generation（位于堆外 non-heap,非堆）
+	
+	3、java stack
+		不共享
+		每个线程对应一个stack，线程栈，方法栈
+		调整栈帧：Java -Xss1m
+		oom：out of memory,栈内存
+	4、native method stack
+		不共享
+	5、program counter register
+	
+	6、通过jvisualvm查看jvm结构
+		a、cmd --> jvisualvm
+		b、打开窗口
+		c、工具菜单-->插件-->可用插件-->visual GC-->安装
+		
+JConsole
+--------------------------------------
+	1、cmd-->jconsole
+	2、打开java控制台
+	
+	heap			//堆
+	non-heap		//非堆（jvm中堆以外的空间---method area,stack）
+	off-heap		//离堆，jvm之外的空间

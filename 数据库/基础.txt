@@ -1,0 +1,66 @@
+数据库
+------------------------
+	1、RDBMS
+		relation databse managerment system，关系型数据库管理系统
+		存放的是结构化数据
+		
+		SQL：structured Query language，结构化查询语言
+		
+MYSQL常用指令
+-----------------------------------
+	1、启动mysql 命令行
+		mysql -h 远程主机名 -u 用户名 -p 密码
+	2、查看mysql帮助
+		mysql --help
+	3、查询当前时间
+		select current_date;
+		select now();
+		
+CRUD
+-----------------
+	1、create		创建
+	2、retrieve		检索
+	3、update		更新
+	4、delete		删除
+	
+术语
+-----------------------------
+	1、Table    表
+	2、column   字段
+	3、row		记录
+	4、库		表的集合
+	
+存储过程
+----------------------------------
+	注意：我们先需要将结束符号修改一下，使用delimiter 结束符号
+	
+	store procedure，存放在数据库中的一组SQL，在服务器端执行
+	1、创建存储过程
+		create procedure sp_count (out param int)
+		begin
+			select count(*) into param from test;
+		end
+		// -----这个是存储过程的结束符号md	
+		
+分组查询
+---------------------------------------
+	1、创建表
+	2、分组查询 group by
+	3、对分组之后的元素进行再次过滤可以使用 having
+		注意：感觉和where有些类似，但是where实在group by之前，having是在group by之后进行
+		
+索引：
+	1、普通索引
+		创建索引 create index <索引名称>  on tableName (列的名称);
+		修改表		alter table tableName add index [索引名称](列的列表);
+		创建表的是否指定索引：create table tableName([...],index [索引名称](列的名称))
+	2、唯一索引
+		不允许其中任何两行具有相同索引值的索引
+		创建索引：create unique index <索引名称> on tableName (列的名称);
+		修改表：alter table tableName add unique [索引的名字] (列的名称)
+		创建表的时候指定索引，例如create table tableName ([...],unique [索引名称] (列的名称))
+	3、主键索引
+		简称为主索引，数据库列表中一列或列组合的值唯一标识表中的每一行
+	4、聚集索引
+		也称聚簇索引，表示行的物理顺序与键值的逻辑相同，一个表只能包含一个聚簇索引
+		创建聚集索引：create clustered index <索引名> on tableName (列的名称)

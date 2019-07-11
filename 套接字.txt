@@ -1,0 +1,38 @@
+Socket 
+------------------	
+	1、套接字
+	2、stream
+	3、进程间通讯
+	4、
+	
+	ServerSocket：客户端，指定服务器端端口
+-------------------------
+		port:必须
+
+protocal
+
+TCP
+----------------------------
+	1、transfer control protocal ,传输控制协议
+	2、约定
+	
+UDP
+-----------------------------
+	2、User Data protocal,用户数据报协议
+
+Socket:服务器端
+------------------------
+		
+	
+C/S结构
+------------------
+		1、client / Server
+			客户端 / server(DB Server)
+		2、Rich Client
+			UI
+		3、
+B/S
+-------------------
+		1、Browser/server
+			浏览器/服务器（web server）
+		2、瘦客户端程序	

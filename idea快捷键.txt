@@ -1,0 +1,10 @@
+idea快捷键
+
+ctrl+空格	补齐
+ctrl+Q		文档
+ctrl+B		结构
+shift+f6	快速更改变量名
+ctrl+O		快速重写
+ctrl+I		实现
+ctrl+shift+空格 	智能查找
+
