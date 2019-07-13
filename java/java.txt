@@ -1,0 +1,8 @@
+
+
+1、在Java中声明native()方法，然后编译； 　　
+2、用javah产生一个.h文件； 　　
+3、写一个.cpp文件实现native导出方法，其中需要包含第二步产生的.h文件（注意其中又包含了JDK带的jni.h文件）； 　　
+4、将第三步的.cpp文件编译成动态链接库文件； 　　
+5、在Java中用System.loadLibrary(String libname)方法加载第四步产生的动态链接库文件，
+	这个native()方法就可以在Java中被访问了。
