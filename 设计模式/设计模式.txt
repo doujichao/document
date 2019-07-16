@@ -1,4 +1,6 @@
 里氏替换原则：无论交换那个子类，程序都能够正常运行
+	利用抽象类和接口从具体类中抽出抽象方法
+	在将实例作为参数传递至类中，或者在类的字段中保存实例时，不适用具体类型，而是使用抽象类型和接口
 开闭原则：对扩展开发，对修改关闭
 
 flyweight模式(享元)：
@@ -172,4 +174,47 @@ Facade(窗口模式)：为一些错综复杂的类整理出高层接口，通过
 		Client(请求者)：负责调用Facade角色
 		
 Mediator(中介者模式或调停者模式)：组员向仲裁者报告，仲裁者向组员下达指示
+	使用角色：
+		Mediator(仲裁者，中介者)：负责定义与Colleage角色进行通讯和做出角色的接口
+		ConcreteMediator(具体的仲裁者、中介者)：负责实现Mediator角色的接口，负责实际做出决定
+		Colleague(同事)：负责定义与Mediator角色进行通讯的接口
+		ConcreteMediator(具体的同事)：负责实现Colleague角色的接口
+	作用：可以将控制集中到一个类中，方便进行调试
+Observer模式(观察者模式)：当观察对象的状态发生变化的时候，会通知给观察者
+	使用角色：	
+		Subject(观察对象)：表示观察对象，负责注册观察者和删除观察者的方法
+		ConcreteSubject(具体的观察对象)：当自身状态发生变化后，通知所有已经注册的Observer角色
+		Obserber(观察者):负责接收来自Subject角色的状态变化的通知
+		ConcreteObserver(具体的观察者)：会获取观察对象的最新状态
+	也被称为Publish-Subscribe(发布-订阅)模式
+	MVC中Model和View的关系类似于Subject和Observer关系
+	java.util.Observer和java.util.Observable是java实现的观察者模式
 	
+Memento(备忘录模式)：可以实现撤销、重做、历史纪录、快照功能
+	使用角色：
+		Originator(生产者)：角色会保存自己的最新状态时生成Memento角色，当时把以前的Memento角色传递给
+			Originator角色时，会将自己恢复至生成该Memento角色时的状态
+		Memento(纪念品)：Memento角色会将Originator角色的内部信息整合在一起	
+			Memento角色一般会有两种接口：
+				wide interface---宽接口：所有用于恢复对象状态信息的方法集合
+				marrowinterface--窄接口：
+		Caretaker(负责人)：	当负责人想要保存当前的状态的时候，会通知Originator角色，Originator角色在接收
+			到通知后会产生Memento角色的实例，并将其返回给Caretaker
+State(状态模式)：用类表示状态
+	使用角色：
+		State(状态)：定义了根据不同状态进行不同处理的接口
+		ConcreteState(具体状态)：表示各个具体状态
+		Context(状况、前后关系，上下文)：持有表示当前状态的ConcreteState
+	重点是对于状态改变的控制	
+Flyweight(享元模式)：作用是为了让对象变轻，重点在于共享元素
+	使用角色：
+		Flyweight(轻量级)：通过Flyweight角色表示可能会被共享的类
+		FlyweightFactory(轻量级工厂)：由此工厂生产的实例可以实现共享
+		Client(请求者)：使用工厂来生成Flyweight角色
+	使用享元模式的可能地方：如果被改变，就会对多个地方产生影响，有多个地方会改变
+	用自己的话来说就是：改变一个地方会同时改变同一个地方的相同元素
+	Intrinsic与Extrinsic:
+		Intrinsic:应当共享的信息，本质的，固有的，不依赖实例的状态，任何情况都不会改变
+		Extrinsic:不应当共享的信息，外在的，实例的位置、状态发生改变时会变化的信息
+		
+Proxy(代理模式)：只在必要的时候生成实例		
