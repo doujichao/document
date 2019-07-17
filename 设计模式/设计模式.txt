@@ -2,27 +2,14 @@
 	利用抽象类和接口从具体类中抽出抽象方法
 	在将实例作为参数传递至类中，或者在类的字段中保存实例时，不适用具体类型，而是使用抽象类型和接口
 开闭原则：对扩展开发，对修改关闭
-
-flyweight模式(享元)：
-	在编程中，有时会发现创建大量的同类的对象
-	对象的创建在java时比较耗时的，同时这些的回收也会占用较多的资源
-	享元的意义是：尽可能重复利用已经创建的对象
-	条件：对同一个对象的复用不会影响处理结果
 	
-Command模式：
-	它尝试以物件来代表实际行动，命令物件可以把行动(action)及其参数封装起来，于是这些行动可以
-		重复多次
-		取消
-		取消后重做
-	主要意义：
-		1、将复杂的操作分解，简化了每一个操作的功能，达到解耦的目的
-		2、通过将多个command组合，可以实现复杂的操作，实现command的复用
-		3、支持command的取消以及重做
-
-责任链模式：
-	责任链模式由一系列的command对象组成，在处理时，按照command对象的顺序逐步处理
-	可根据command对象的执行情况决定终止执行或继续执行
-	command模式决定了当执行力一个command的时候，只能够完成一个小任务
+设计原则：
+	1、把变化和不变化的部分进行分开；
+	2、针对接口编程，而不是针对实现编程
+	3、多用组合，少用继承
+	
+设计的时候需要思考：
+	1、我们目前知道什么
 
 Iterator模式（迭代器设计模式）：
 	类似于java遍历集合
@@ -130,10 +117,13 @@ Bridge模式(桥梁模式):将类的功能层次结构和类的实现层次结�
 	继承是强关联关系，委托是弱关联关系
 	
 Strategy(策略模式)：能够整体的替换算法，让我们轻松的以不同的算法去解决同一个问题
+	定义：定义了算法族，分别封装起来，让它们之间可以互相替换，此模式让算法的变化独立于使用算法的客户
 	使用角色：
 		Strategy(策略)：实现策略所必须的接口
 		ConcreteStrategy(具体的策略)：负责实现Strategy角色的接口
 		Context(上下文)：保存了ConcreteStrategy角色去实现需求
+	使用委托比使用继承更好，可以设计一个算法的通用接口，通过构造函数或者set方法等方式设置
+		策略，从而达到代码的复用
 		
 Composite(组合模式)：能够使容器和内容具有一致性，创造除递归结构
 	使用角色：
@@ -180,6 +170,8 @@ Mediator(中介者模式或调停者模式)：组员向仲裁者报告，仲裁�
 		Colleague(同事)：负责定义与Mediator角色进行通讯的接口
 		ConcreteMediator(具体的同事)：负责实现Colleague角色的接口
 	作用：可以将控制集中到一个类中，方便进行调试
+	
+	
 Observer模式(观察者模式)：当观察对象的状态发生变化的时候，会通知给观察者
 	使用角色：	
 		Subject(观察对象)：表示观察对象，负责注册观察者和删除观察者的方法
@@ -217,4 +209,39 @@ Flyweight(享元模式)：作用是为了让对象变轻，重点在于共享元
 		Intrinsic:应当共享的信息，本质的，固有的，不依赖实例的状态，任何情况都不会改变
 		Extrinsic:不应当共享的信息，外在的，实例的位置、状态发生改变时会变化的信息
 		
-Proxy(代理模式)：只在必要的时候生成实例		
+Proxy(代理模式)：只在必要的时候生成实例
+	使用角色：
+	Subject(主体)：代表Proxy角色和RealSubject角色之间具有一致性的接口
+	Proxy(代理人)：代理角色会尽量自己处理，当自己不能处理的时候交给RealSubject处理
+	RealSubject(实际的主体)：在代理人无法胜任的工作时出场
+	Client(请求者)：
+	Proxy模式有多种变化形式：
+		1、Virtual Proxy(虚拟代理)
+		2、Remote Proxy(远程代理)
+		3、Access Proxy(相当于在RealSubject角色的功能时设置访问限制)
+Command(命令模式)：一个类在进行工作时会调用自己或是其他类的方法，虽然调用结果会反应在对象的状态中，但是
+		不会留下工作历史记录
+	使用角色：
+		Command(命令)：负责定义命令的接口
+		ConcreteCommand(具体的命令)：负责实现Command角色中定义的接口
+		Receiver(接收者)：Command角色执行命令的对象，也成为命令接收者
+		Client()：负责生成ConcreteCommand角色并分配Receiver角色
+		Invoker(发动者)：调用Command角色中定义的接口API
+		
+Interpreter(解释器模式)：
+	<program> ::=program<command list>
+		定义了程序<program>,即program关键词后面跟着命令列表
+	<command list>::=<command>* end
+		定义了命令列表，即重复0次以上<command>,接着end关键子
+	<command> ::= <repeat command> | <primitive command>
+		定义命令<command>：即所谓的<repeat command>或者<primitive command>
+	<repeat command>::= repeat <number> <command list>
+		定义循环命令：即关键词 repeat 关键词后面跟着循环次数number和需要循环的命令列表
+	<primitive command >::= go | right | left
+	词法分析时从文字中得到标记
+	语法分析则是根据标记推导出语法树
+	使用角色：
+		AbstractExpression(抽象表达式)：定义了语法树节点的共同API
+		TerminalExpression(终结符表达式)：对应BNF中的终结表达式
+		NonterminalExpression(非终结表达式)：对应BNF中的非终结表达式
+		Context(文脉，上下文)
