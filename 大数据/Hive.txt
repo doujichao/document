@@ -1,0 +1,79 @@
+RDBMS
+--------------------------
+	Relation Database Management System,关系型数据库管理系统
+	OLTP：Online transaction process.
+	a.原子性
+	c.一致性
+	i.隔离性
+	d.永久性
+	
+	低延迟
+	
+事务并发现象
+---------------------------
+	1、脏读				//读未提交
+	2、不可重复读		//读不回去
+	3、幻读				//读多了
+	
+事务的隔离级别
+---------------------------
+	1、读未提交
+	2、读已提交
+	3、可以重复读
+	4、串行化
+	
+Hive
+-----------------------
+	数据仓库文件。
+	存储，重在分析，延迟高
+	使用Sql来读、写、管理驻留在分布式存储系统大型数据集，可以使用命令行和驱动程序连接到hive
+	运行在hadoop之上，用来汇集查询数据
+	不是：
+		关系型数据库
+		OLTP
+		实时查询和底层更新
+	特定：
+		在数据库中存放shema，处理数据到HDFS
+		OLAP
+		提供类SQL语言，HQL（HiveQL）
+		可扩展、可伸缩、速度快
+		
+Hive架构
+------------------------------
+	UI（web ui/CLI(命令行)/）
+	MetaStore + HQL ProcessEngine
+				Execution Engine
+				MapReduce
+				
+			
+Hive组件
+-----------------------------
+	UI
+	MetaStore				//schema、table、column信息在RDES表中
+	HQL Process Engine		//编写HQL语句
+	Execution Engine		//处理查询，生成结果
+	HDFS
+	
+Hive安装
+-----------------------
+	1、下载并tar开
+	2、配置环境变量
+	
+配置Hive
+-------------------------
+	在[hive_home]/conf/hive-env.sh
+	配置hadoop_home
+	
+配置hive的元数据库
+-----------------------
+	hive使用rdbms存储元数据，内置了derby数据库
+	hive/conf/hive-default.xml.template //hive的默认配置，不要修改，创建hive-site.xml
+	[/soft/hive/apache-hive/confi/hive-site.xml]
+
+使用hive
+--------------------------
+	1、初始化schema库
+		hive/bin/schematool -initSchema -dbType derby
+	2、完成后，在当前目录下创建一个文件夹	
+	OLAP：online analyze process.
+	

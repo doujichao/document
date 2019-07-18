@@ -1,0 +1,57 @@
+OSGI(Open Service Gateway Initiative)
+
+Bundle
+-----------------------
+	从形式上将就是在WEB-INF目录下的MANIFEST.MF文件中加入OSGI特定描述的jar包
+	Bundle的生命周期被OSGI框架所管理，具有以下几个状态：
+	INSTALLED(安装):
+	RESOLVED(解决)：
+	UNINSTALLED(卸载)：
+	STARTING(开始)：
+	ACTIVE(活动)：
+	STOPPING(停止)：
+	
+	在OSGI中，每个Bundle都有自己独立于其他Bundle的ClassLoader。
+	一个Bundle可能会用到另外的Bundle的类，Bundle之间的交互如何实现？
+		1、通过package的export和import来进行
+		2、通过service的方式来进行，而提供Service有两种方式：
+			1、通过BundleContext来获取
+			2、使用DeclarativeService来实现
+Component 
+-------------------------------------
+	任何一个普通的java对象都可以通过配置文件中的定义变成一个Component，每个Bundle都含有多个Component
+	
+Declarative Service
+------------------------
+	通过DS，我们可以在Bundle中定义Component，通过配置的方式发布服务，获取服务
+
+Service-Oriented Component Model(SOCM):	面向服务的组件模型，Component是服务的载体
+	提供对外使用的服务并可能使用外部的服务
+	
+	
+一些实例
+Equinox
+----------------------------
+	是Eclipse中的项目
+
+	
+使用OSGI
+--------------------------
+	1、新建OSGI启动项目，Eclipse中Run Configurations
+	2、取消勾选所有的Handles
+	3、选择
+		org.apache.felix.gogo.command
+		org.apache.felix.gogo.runtime
+		org.apache.felix.gogo.shell
+		org.eclipse.equinox.console
+		org.eclipse.osgi
+		点击运行，控制台初选osgi> 为正常运行
+	4、创建一个plign-in工程	，注意 an OSGI framework:选项选择standard
+	5、输入Bundle的相关元数据信息
+		Plug-in ID指的是唯一表示，在实际项目中可以采用类似java的包名组织的策略来保证标识的唯一性
+		Plug-in Version指的是Bundle的版本
+		Plug-in Name指的是Bundle的更具有意义的名称
+		Plug-in Provider(Vendor)指的是Bundle的提供商
+		Execution environment指的是Bundle运行需要的环境
+		剩下的最关键的就是Activator部分了，这里填入自己的一个类名就可以了
+	
