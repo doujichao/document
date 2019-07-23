@@ -233,7 +233,7 @@ linux文件系统
 <configuration>
 	<property>
 		<name>fs.defaultFS</name>
-		<value>hdfs://u001/</value>
+		<value>hdfs://u000/</value>
 	</property>
 	<property>
 	  <name>hadoop.tmp.dir</name>
@@ -247,7 +247,7 @@ linux文件系统
 <configuration>
 	<property>
 		<name>yarn.resourcemanager.hostname</name>
-		<value>u001</value>
+		<value>u000</value>
 	</property>
 	<property>
 		<name>yarn.nodemanager.aux-services</name>
@@ -276,7 +276,7 @@ linux文件系统
 	</property>
 	<property>
 	<name>dfs.namenode.secondary.http-address</name>
-	<value>u002:50090</value>
+	<value>u001:50090</value>
 	</property>
 </configuration>
 				
@@ -358,6 +358,7 @@ UDP
 		jps
 	4、停止所有进程
 		stop-all.sh
+		
 
 使用webui访问hadoop hgfs
 ---------------------------------
@@ -1092,6 +1093,7 @@ eclipse中maven项目需要查看源代码时，项目不能正常下载可以�
 			export HADOOP_NAMENODE_OPTS=
 	4、启动名称节点
 		hadoop-daemon.sh start namenode
+		start-dfs.sh 
 		
 	[客户端]
 	1、找到namenode类，在main函数上打断点

@@ -1,3 +1,5 @@
+hive帮助：两次tab键
+
 RDBMS
 --------------------------
 	Relation Database Management System,关系型数据库管理系统
@@ -21,6 +23,8 @@ RDBMS
 	2、读已提交
 	3、可以重复读
 	4、串行化
+	
+	
 	
 Hive
 -----------------------
@@ -59,21 +63,312 @@ Hive安装
 	1、下载并tar开
 	2、配置环境变量
 	
-配置Hive
+配置Hive环境
 -------------------------
-	在[hive_home]/conf/hive-env.sh
+	在[hive_home]/conf/hive-env.sh 复制hive-env.sh.template修该HADOOP_HOME属性
 	配置hadoop_home
 	
 配置hive的元数据库
 -----------------------
-	hive使用rdbms存储元数据，内置了derby数据库
-	hive/conf/hive-default.xml.template //hive的默认配置，不要修改，创建hive-site.xml
-	[/soft/hive/apache-hive/confi/hive-site.xml]
-
+	1、hive使用rdbms存储元数据，内置了derby数据库
+	2、hive/conf/hive-default.xml.template //hive的默认配置，不要修改，创建hive-site.xml
+		复制hive-default.xml.template 为文件hive-site.xml
+	[/soft/hive/apache-hive/conf/hive-site.xml]
+	3、修改配置hive-site.xml
+		替换${system:java.io.tmpdir}=/home/ubuntu/hive 
+		替换${system:user.name}=/ubuntu
 使用hive
 --------------------------
+	0、启动hadoop
 	1、初始化schema库
 		hive/bin/schematool -initSchema -dbType derby
-	2、完成后，在当前目录下创建一个文件夹	
-	OLAP：online analyze process.
+	2、完成后，在当前目录下创建一个文件夹 metastore_db{元数据库}
+	异常处理
+	java.net.URISyntaxException: Relative path in absolute URI: ${system:java.io.tmpdir%7D/$%7Bsystem:user.name%7D
+	处理：需要替换system:java.io.tmpdir和system:user.name为系统目录和子目录，自行创建
 	
+Hive数据类型
+------------------
+	1、Column Types
+	2、Literals
+	3、Number value
+	4、Complex Types
+	
+jdbc连接hive
+-------------------------	
+	drivername=org.apache.hadoop.hive.jdbc.HiveDriver
+	url=jdbc:hive://localhost:10000/default
+	
+
+	
+hive常用命令
+----------------------------
+	$> !clear;			//hive中执行shell命令的方式
+	$> dfs -lsr /;		/使用dfs命令
+	
+将hive中的schema存放到外部的mysql中
+-------------------------------------------
+	1、编写hive-site.xml添加mysql信息
+		[hive/conf/hive-site.xml]
+		 <property>
+			<name>javax.jdo.option.ConnectionURL</name>
+			<value>jdbc:mysql://192.168.43.52:3306/myhive</value>
+		</property>
+		<property>
+			<name>javax.jdo.option.ConnectionDriverName</name>
+			<value>com.mysql.jdbc.Driver</value>
+		</property>
+		<property>
+			<name>javax.jdo.option.ConnectionUserName</name>
+			<value>root</value>
+		</property>
+		<property>
+			<name>javax.jdo.option.ConnectionPassword</name>
+			<value>15937116841</value>
+		</property>
+	2、在mysql中创建myhive数据库
+		create database myhive;
+	3、mysql驱动程序（jar）放置到hive classpath下
+		。。。
+	4、重新初始化hive schema元数据库	
+		schematool -initSchema --dbType mysql
+		
+		其中dbs标识数据库名，tbls标识表名，columns_v2标识字段名
+		
+	hive的API使用：需要启动Hive服务器Hiveserver2，10000端口
+	
+启动hiveserver2服务，接收多个客户端连接请求，使得client通过jdbc连接操作hive仓库
+---------------------------
+	$> hive --service hiveserver2 start			//启动服务
+	$> netstat -ano | grep 10000				//查看端口
+
+在eclipse中创建maven项目，使用jdbc
+----------------------------------------
+	1、创建java项目
+	2、引入外部jar包
+		181个
+	3、修改hive-site配置文件
+		使用OS操作系统的认证方式
+		[hive-site.xml]
+		hive.server2.enable.doAs=false
+		hive.metastore.sasl.enabled=false
+		hive.server2.authentication=NONE
+	4、重新启动hiveserver2服务器
+		hive --service hiveserver2 stop
+		
+	4、编写App程序
+		public static void main(String[] args) throws Exception {
+				Class.forName("org.apache.hive.jdbc.HiveDriver");
+				Connection conn = DriverManager.getConnection("jdbc:hive2://192.168.124.130:10000/default","ubuntu","15937116841");
+				PreparedStatement ps = conn.prepareStatement("select * from t");
+				ResultSet rs = ps.executeQuery();
+				while(rs.next()) {
+					System.out.println(rs.getInt("id")+","+rs.getString("name")+","+rs.getInt("age"));
+				}
+				rs.close();
+				ps.close();
+				conn.close();
+		}	
+	5、常用聚集函数
+		count()
+		sum()
+		min()
+		max()
+		avg()
+	6、解决beeline命令行终端的上下键导航历史命令的bug
+		[bin/beeline]
+		修改行
+		if[[ ! $(ps 0o stat= -p $$) =~ + ]];then
+		为
+		if[[ ! $(ps 0o stat= -p $$) =~ "+" ]];then
+		
+Hive常用命令，类似于mysql
+-------------------------------------
+	show databases;
+	show tables;
+	create table hive1.t as select * from hive2.t;			//复制表
+	
+	//创建表
+	$hive>create table if not exists employee( eid int, name string, salary string, destination string ) 
+	comment 'employee details' 							//注释
+	row format delimited 
+		fields terminated by '\t' 							//字段结束符
+		lines terminated by '\n' 							//行结束符
+	stored as textfile;									存储成何种文件
+	
+	//加载数据到hive
+	$hive> Load data [local] inpath 'filepath' [overwrite] into table tablename [partition (partcol1=val1,partcol2=val2...)]
+	//插入数据 === 上传
+	$hive> Load data [local] inpath '/home/ubuntu/employee.txt'  into table employee 
+	
+	准备员工表数据
+	1201	Gopal	450000	Techinical	manager
+	1202	Manisha	450000	Proof	reader
+	1203	Masthanvali	40000	Technical	writer
+	1204	Krain	40000	Hr	Admin
+	1205	Kranthi	30000	Op	Admin		
+	
+hive命令
+-------------------------------
+	hive> dfs -lsr /			执行dfs命令
+	hive> !clear;				执行shell脚本
+	hive> hive -e "select * from test"		//-e execute
+	hive> tab tab				//帮助
+	hive> -- help				//注释
+	hive> set hive.cli.print.header=true;	显示字段名称	
+	hive> create database if  exists xxx //
+	hive> create database hive3 with dbproperties('author'='xupc','createtime'='day')
+	hive> drop database if  exists xxx cascde//	级联删除表
+	hive> create database hive2 location '/user/ubuntu'
+	hive> desc [ribe] database hive; 			//显示db信息
+	hive> desc [ribe] database extended hive;	//显示db信息，包含扩展信息
+	hive> desc formatted hive;					//显示格式化信息
+	hive> create table test1 like test;			//复制表,只复制表结构，没有数据
+	hive> create table test1 as select * from text;			//复制表,复制表结构，有数据
+	hive> show tables in database;				//显示指定数据库的表集合，默认是当前库
+
+分区表
+-----------------------
+	创建分区表
+	create table test(id int,name string,age int) partitioned by (province string,city string);				//按照省份和城市进行分区
+	加载数据到指定分区
+	load data local inpath '/home/ubuntu/employee.txt' into table test partition(province='hebei',city='baoding')
+	查询模式：strict/nostrict
+		:hive> set hive.mapred.mode=strict		严格模式，必须指定分区
+		:hive> set hive.mapred.mode=nonstrict		非严格模式
+		
+	查看分区表中有哪些分区：
+		hive> show partitions test;
+		hive> show partitions test partition(province='hebei');
+	手动增加分区
+		hive> alter table test add partition(province='henan',city='pingdingshan')
+	//增加列
+	alter table test add columns(birth string,fire string);		
+	//修改表属性
+	alter table test set tblpropertiest('x'='');
+	//复制数据到分区表
+	insert into test partition(province='henan',city='baoding') select id,name,age where province = 'hebei' and city='shijiazhuang'
+	
+	//动态分区
+	insert overwrite table test partition(province,city) select id ,...,province from city
+	
+	//导入导出
+	导出hive数据到本地目录
+		insert overwrite local directory '/home/ubuntu/hive' select * from test where province='hebei'
+	导出hive数据到hdfs目录	
+		insert overwrite directory 'hdfs://u000:8020/' select * from test where province='hebei'
+		
+	查询数据向多个目录同时输出
+		from test t
+			insert overwrite directory '/home/ubuntu/henan' select * where t.province='henan'
+			insert overwrite directory '/home/ubuntu/hebei' select * where t.province='hebei';
+查询 
+-----------------------------
+	查询，投影查询，指定表的别名
+		
+	使用函数
+	select id,upper(name) from test;
+	select id,lower(name) from test;
+	+ - * / & | ~ ^
+	round()		四舍五入
+	floor()		取整
+	ceil()		取整加一
+	rand()		随机数
+	
+	聚合函数
+	count()
+	sum()
+	avg()
+	max()
+	min()
+	
+	去重distinct
+	select count(distinct name) from test;
+	
+	表生成函数
+	select explode(array('tom','tomas')) ;
+	
+	ascii函数，字符串首个字符的ascii值
+	
+	类型转换
+	select cast('120' as bigint) +200; 	//320
+	
+	字符串连接
+	select concat('120',200);	//120200
+	
+	分页查询
+	select * from test limit 1,2;		从第1条开始查2条
+	
+	case...when then end 相当于if
+	select id, name,
+		case 
+			when age <=12 then 'young'
+			when age >12 and age <= 13 then 'middle'
+			when age >13 and age <= 15 then 'old'
+			else 'too old'
+		end as yearstate from test
+	
+	
+		
+**********何时hive可以避免MR操作**************
+--------------------------------------------------------
+	不是mr的job就是本地模式
+	1、全表扫描，没有where子句
+		select * from test
+	2、where子句中只有分区子句
+		select * from test where provice ='hebei';
+	3、设置hive.exec.model.local.auto=true
+		该属性hive会尽量使用local模式查询
+	4、其余的所有查询都会转换为mr操作	
+	
+托管表
+-------------------------
+	hive默认表都是托管表。hive控制其数据的生命周期，删除托管表，元数据和数据都被删除
+
+外部表
+--------------------------------
+	hive控制元数据，删除托管表时，数据不被删除
+	create external table
+		
+使用beeline客户端可以实现远程jdbc连接
+---------------------------------------------
+	1、连接
+		hive --service -beeline -u jdbc:hive2://u000:10000/default
+		beeline -u jdbc:hive2://u000:10000/default
+		
+		
+配置hive的仓库位置
+---------------------------------
+	[hive-site.xml]
+	hive.metastore.warehouse.dir=/user/hive/warehouse
+	
+hive的数据类型
+--------------------------------
+		类型		size						   案例
+	TINYINT		1 byte singed integer.				20
+	SMALLINT	2 byte singed integer.				20
+	INT			4 byte singed integer.				20
+	BIGINT		8 byte singed integer.				20
+	BOOLEAN		Boolean true or false.				TRUE
+	FLOAT		Single precision floationg point.	3.14159
+	DOUBLE		Double precision floationg point.	3.14159
+	
+	String 		'Now is the time' "for all good men"
+	TIMESTAMP	integer,float or string 
+	BINARY		字节数组
+	
+	[集合类型]
+	STRUCT		struct('John','Dos')
+	MAP			map('first','John','last','Doe')
+	ARRAY		array('John','Doe')
+	
+hive默认的分隔符
+--------------------------------
+	\n				行分隔符
+	^A				分隔字段
+	^B				分隔Array和Struct中的元素
+	^C 				分隔Map中键和值
+	
+hive所谓的读模式
+-------------------------
+	hive在写操作时不校验，在读时校验
