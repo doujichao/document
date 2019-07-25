@@ -308,7 +308,9 @@ hive命令
 			else 'too old'
 		end as yearstate from test
 	
-	
+连接查询
+	内连接	join...on
+	hive> select a.id,a.name,b.id,b.orderno,b.price from customers a join orders b on a.id=b.cid 
 		
 **********何时hive可以避免MR操作**************
 --------------------------------------------------------
