@@ -311,7 +311,74 @@ hive命令
 连接查询
 	内连接	join...on
 	hive> select a.id,a.name,b.id,b.orderno,b.price from customers a join orders b on a.id=b.cid 
+	
+	连接查询优化条件：查询表的大小从左到右是递增的
+	
+	使用查询暗示
+	select /* +streamtable(c)*/ c.id,c.name,c.age,o.orderno,o.price from orders o join customers c on c.cid=o.id
+	
+	left outer join 
+	right outer join
+	full outer join
+	
+	左半连接，select和where子句不能引导到右边表
+	坐标的记录在右表中一旦找到对应的记录，右侧表即停止扫描
+	select c.id,c.name from customers c left semi join order o on c.id=o.cid 
+	
+	笛卡尔积 m x n 
+	select c.id,c.name,o.orderno from customers c join order o
+	
+	map端连接，一张小表，通过mapper的时候，将小表完全载入内存
+	暗示 mapjoin(c)
+	select /*+mapjoin(c)*/ c.id,c.name,o.orderno from customers c join orders o;
+	select /*+mapjoin(o)*/ c.id,c.name,o.orderno from customers c join orders o;
+	
+	set hive.auto.conert.join=true
+	hive.mapjoin.smalltable.filesize=25000000
+	
+	order by 全排序，对所有数据通过一个reduce进行排序
+	如果开启了hive.mapred.mode=strict,在全排序时必须结合limit使用
+	--现在推荐使用hive.strict.checks.*属性
+	select * from orders order by cid asc,price desc;
+	
+	sort by 每个reduce进行排序（局部排序）
+	select * from orders sort by cid asc,price desc;
+	
+	distribute by 等价于自定义分区函数	
+	select * from orders distribute by cid  sort by price desc;
+	
+	cluster by == distribute by ...sort by ...
+	
+	分桶采样
+	select * from orders tablesample (bucket 3 out of 10 on number);
+	
+	百分比采样(按照数据块的百分比)
+	select * from orders tablesample(0.1 percent)
+	
+	union all 联合操作，字段类型和字数需要匹配
+	select id ,name from customers union all select id, orderno from order;
+	
+	view (虚表)，降低查询的复杂度
+	create view v_name as select...
+	create view view1 as select c.id,c.name,c.age,o.id,o.prderno,o.price from customers c left
+		out join orders o on c.id=o.cid;
 		
+	通过视图直接查询
+		select * from view1 where price > 3000
+		
+	使用like方式创建view
+		create view v2 like view2;
+		
+	删除视图
+		drop view if exists v2;
+		
+	索引，hive没key(primary key+auto_increment)
+		创建索引，Deferred，Rebuild该选项时，索引为空白状态，需要rebuild才能初始化
+		create index idx_test2_id on table test2(id) as 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler' with Deferred rebuild
+		idxproperties ('creator'='me') in table customers comment 'this is a comment';
+		
+		alter index idx_customer_id on customers rebuild; 重建索引
+	
 **********何时hive可以避免MR操作**************
 --------------------------------------------------------
 	不是mr的job就是本地模式

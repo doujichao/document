@@ -6,3 +6,11 @@
 4、将第三步的.cpp文件编译成动态链接库文件； 　　
 5、在Java中用System.loadLibrary(String libname)方法加载第四步产生的动态链接库文件，
 	这个native()方法就可以在Java中被访问了。
+	
+java的清单文件：
+	Main-class:用于指定main函数路径 可以使用 java -jar *.jar 文件启动jar
+	
+在jar文件内部的何处寻找请求的类？
+	jar文件的隐式策略是寻找相对于jar文件根的所有目录，就好像它们是所请求的类对应的包名称
+哪些内部的类应该对外部公开？	
+	向所有请求者公开相对根的包里面的所有类
