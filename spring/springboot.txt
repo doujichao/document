@@ -12,15 +12,41 @@ springboot精要
 			4、应用程序里线程的当前状态
 			5、应用程序最近处理过的Http请求的追踪情况
 			6、各种和内存用量、垃圾回收、web请求以及数据源用量相关的指标
+			
+优点：
+--------------------------
+	快速创建独立运行的Spring项目以及与主流框架集成
+	使用嵌入式Servlet容器，应用无需打包成war包
+	starters自动依赖版本控制
+	大量的自动配置，简化开发，也可以修改默认值
+	无需配置xml，无代码生成，开箱即用
+	准生产环境的运行时应用监控
+	与云计算的天然集成
+
+微服务：
+------------------
+	2014，martin flower
+	微服务：架构风格
+	应该是一组小型服务，可以通过http的方式进行沟通
+	每一个功能元素最终都是一个可独立替换和独立升级的软件单元
+	
+	单体应用：All in One
 
 定义初始化类
 --------------------------------
 @SpringBootApplication 开启了Spring的组件扫描和SpringBoot的自动化配置
+	来标注一个主程序类
 @Configuration	表明该类使用Spring基于java的配置
 @ComponentScan：启动组建扫描，默认扫描当前类所在的包下
 @EnableAutoConfiguration:启动Spring的自动配置	
 @RunWith
 @SpringApplication 加载Spring应用程序上下文
+
+控制层：
+-------------------------
+	@Controller
+	@RequestMapping
+	@ResponseBody
 
 定义实体类
 ----------------------------------------------
