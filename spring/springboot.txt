@@ -23,6 +23,57 @@ springboot精要
 	准生产环境的运行时应用监控
 	与云计算的天然集成
 
+精粹：
+--------------------------------
+	1、SpringBoot启动的时候会加载大量的自动配置类
+	2、我们需要的功能有没有SpringBoot默认写好的自动配置类
+	3、我们在来看这个自动配置类中到底配置了哪些组件
+	4、给容器中自动配置类添加组件的时候，会从properties类中获取某些属性，我们就可以在配置文件
+	中指定这些属性的值
+	
+细节：
+--------------------------
+	1、@Condition派生注解
+	作用：必须是@Conditional指定的条件成立，才给容器添加组件，配置里面的所有内容
+	自动配置类在一定下才能生效
+	自动配置报告：
+	我们可以通过启用debug=true属性，来让控制台打印自动配置报告，这样可以很方便的告诉
+		我们哪些自动配置类生效了，
+
+日志：
+-----------------------------
+	日志门面			日志实现
+	slf4j，jcl			log4j,jul(java.util.logging)
+	jboss-logging		log4j2,logback
+	
+	左边选一个，右边选一个
+	左边：slf4j
+	右边：logback
+	
+	SpringBoot：底层是Spring框架，Spring框架默认选用JCL
+	SpringBoot选用slf4j和logback
+	
+	2、SLF4j使用
+	1、如果在系统中使用slf4j
+		开发的时候，日志记录方法的调用，不应该来直接调用日志的实现类，而是调用日志抽象层
+		的方法，给系统里面导入slf4j和logback的jar
+	2、如何让系统中的所有日志都统一到slf4j
+		1、将系统中其他日志框架先排除出去
+		2、用中间件来替换原有的日志框架
+		3、我们导入slf4j其他实现
+		
+	日志级别：trace < debug < info < war < error
+	日志只会在当前级别和高级别生效
+	logging.path：默认只使用这个属性，
+	logging.file:不指定路径，当前项目下生成spring日志，当然也可以具体路径
+	%d{yyyy-Mm-dd} [%thread] %-5level %logger{50} - %msg%n
+	logging.pattern.console:
+	logging.pattern.file: 
+	
+	如果使用自定义logger配置文件：
+	1、使用loback.xml 日志原生配置文件
+	2、使用loback-spring.xml spring包装的配置文件，可以自定义环境
+	
 微服务：
 ------------------
 	2014，martin flower
@@ -32,21 +83,247 @@ springboot精要
 	
 	单体应用：All in One
 
+spring-boot-starter:springboot启动器，导入相应模块正常运行所需要的模块，spring-boot将所有的
+	功能模块抽取出来，做成一个个starter，只需要在项目里面引入这些starter相关场景
+	所有的依赖导入进来
+	特点：1、主程序已经生成好了，我们只需要写自己的逻辑
+		  2、resources文件夹目录架构
+			1、static，保存所有静态资源
+			2、templates:保存所有的模板页面；（Spring boot默认jar包使用嵌入式Tomcat，默认
+			不支持jsp页面，可以使用模板引擎(freemark,thymeleaf)）
+			3、application.properties:Spring-boot 应用的配置文件
+			
+Spring Boot配置文件
+----------------------------------
+	类型：application.properties 或者 application.yml 配置文件名称固定
+	作用：修改Spring-Boot自动配置的默认值
+	
+YAML(YAML Ain't Markup Language):是一个标记语言，以数据为中心	
+	语法：
+		k：(空格)v	表示一对键值对（空格必须有）；
+		以空格的缩进来控制层级关系；只要左对齐的一列数据，都是同一层级的
+		属性和值也是大小写敏感；
+	值的写法：
+		字面量：普通的值（数字，字符串，布尔）:
+			k: v :字面量直接来写，字符串默认不用加上单引号或者双引号
+			“”：双引号：不会转义字符串里面的特殊字符，特殊字符会作为本身表示的意思
+				name: "zhangsan \n list":输出 zhangsan 换行 list
+			'':会转义特殊字符，特殊字符最终只是一个普通的字符串数据
+				name: 'zhangsan \n list':输出 zhangsan \n list
+		对象(属性和值)(键值对)：
+			对象还是k： v的方式：在下一行来写属性和值的关系，注意缩进
+			friends:
+				lastName:zhangsan
+				age:20
+			行内写法：friends: {lastName: zhangsan,age: 20}
+			
+		数组(List,Set):
+			用-值表示数组中的一个元素
+			1、pets:
+				-cat
+				-dag
+				-pig
+			2、pets[cat,dog,pig]	
+
+application.properties或者application.yml文件存在位置
+------------------------------------------------------------
+	1、外置，在相对于应用程序运行目录的/config子目录
+	2、外置，在应用程序的目录里
+	3、内置，在config包内
+	4、内置，在Classpath根目录
+	
+@ConfigurationProperties和@Value
+---------------------------------------------------	
+将配置文件中配置的每个属性的值，映射到这个组件中
+@ConfigurationProperties 告诉SpringBoot将本类中的所有属性和配置文件中相关的配置进行绑定			
+prefix = "person"：配置文件中那个下面所有属性进行一一配置		
+@Value("#{key}")可以获取applicationkey的值
+
+		@ConfigurationProperties		@Value
+功能 	批量注入配置文件中的属性	一个个绑定
+松散语法	_,-,首字符大写都可以	不支持
+Spel	不支持 						支持	
+JSR303	支持						不支持
+复杂类型封装	支持				不支持（基本类型）
+
+@Validated  校验：使用JSR303格式校验，需要使用@ConfigurationProperties注入属性
+	@Email 校验是否为一个合法的邮箱地址
+
+如果说，我们只是在某个业务逻辑中需要获取一下配置文件
+如果说，我们专门编写了一个javaBean来和配置文件进行映射，我们就直接使用ConfigurationProperties
+
+idea使用的是utf-8
+properties默认使用utf-8		
+
+@PropertySource和@ImportResource
+--------------------------------------
+	@PropertySource:加载指定的配置文件
+	@ImportResource:导入Spring的配置文件，让配置文件里面的内容生效
+	
+	SpringBoot推荐给容器中添加组件的方式：
+	1、配置类====spring配置文件
+		使用@Configuration 指明当前类是一个配置类，就是来替代Spring的配置文件 
+		@Bean 配置Bean
+		配置文件占位符
+			1、随机数
+			在配置文件中可以使用${random.value}、${random.int}、
+			${random.long}、${random.in(10)}、${random.int[120,222]}
+			来获取随机数
+			2、占位符来获取之前配置的值，如果没有可以是用：指定默认值
+
+Profile 多环境配置
+----------------------
+	1、多Profile文件
+		我们在主配置文件编写的时候，文件名可以是 application-{profile}.properties/yml
+		默认使用application.properties的配置；
+		如果使用不同的环境可以使用属性
+		spring.profiles.active=dev
+		
+	2、yml支持多文档块
+		可以使用多文档块，使用符号“---”来分隔文档块
+		使用属性spring-profiles：dev来定义多环境
+		
+	3、激活指定的profile
+		1、在配置文件中指定spring.profiles.active=dev
+		2、命令行激活
+			java -jar jar包名 --spring.profiles.active=dev
+		3、虚拟机参数
+			java -jar -Dspring.profiles.active=dev jar包名
+
+SpringBoot配置文件加载位置
+--------------------------
+	0、通过spring.config.location属性来指定的位置，命令行参数使用
+	1、./config/				项目直接下面的config文件夹下
+	2、./						项目直接目录下
+	3、classpath:/config/		classpath下的config下
+	4、classpath:/				classpath路径下
+	以上是按照优先级从高到低的顺序，所有位置的文件都会被加载，优先级高的文件会覆盖
+	优先级低的文件的内容，这四个配置全部加载著配置文件：形成互补配置
+	我们也可以通过属性spring.config.location来改变默认的配置文件位置
+		注意：项目打包好之后，我们可以使用命令行参数的形式，启动项目的时候来指定配置文件的新
+		位置，指定的配置文件和默认加载的配置文件共同起作用
+
+SpringBoot属性资源优先级，优先级从高到低，高优先级的配置覆盖低优先级的配置，所有的配置会
+形成互补配置
+-----------------------------
+	1、命令行参数
+	2、java:comp/env里的JNDI属性
+	3、jvm系统属性
+	4、操作系统环境变量
+	5、随机生成的带random.*前缀的属性
+	6、优先加载待profile
+		jar包外部的application-{profile}.properties或application.yml(带spring.profile)配置文件
+		jar包内部部的application-{profile}.properties或application.yml(带spring.profile)配置文件
+	7、加载不带profile
+		jar包以外的application.properties或者application.yml(不带spring.profile)文件
+		jar包内部的application.properties或者application.yml(不带spring.profile)文件
+	8、@Configuration注解类上的@PropertySource标注的
+	9、通过SpringApplication.setDefaultProperties指定的默认属性
+	
+配置文件可以配置的内容常用内容：
+------------------------------------
+	server.prot:tomcat配置端口
+	spring.config.location:spring默认配置文件路径
+	spring.profiles:配置当前文档快所属的环境名称
+	spring.profiles.active:配置生效的环境名称
+	spring.context-path:配置项目的访问路径
+
+自动配置原理：
+	1、SpringBoot启动的时候，加载主配置类，开启自动配置功能
+	2、@EnableAutoConfiguration作用：
+		利用AutoConfigurationImportSelector给容器导入一些组件
+		可以查看selectImports()方法的内容
+		
 定义初始化类
 --------------------------------
 @SpringBootApplication 开启了Spring的组件扫描和SpringBoot的自动化配置
 	来标注一个主程序类
 @Configuration	表明该类使用Spring基于java的配置
 @ComponentScan：启动组建扫描，默认扫描当前类所在的包下
-@EnableAutoConfiguration:启动Spring的自动配置	
+@EnableAutoConfiguration:开启自动配置功能，
+@AutoConfigurationPackage:自动配置包
+	@Import:给容器中导入一个组件
+	AutoConfigurationPackages.Registrar：
+	将主配置类(SpringBootApplication标注的类)的所在包及下面所有子包里面的所有组件扫描到
+	Spring容器中
+	AutoConfigurationImportSelector：
+	将所有需要导入的组件以全类名的方式导入组件，会给容器中导入非常多的的自动配置类；给容器中
+	导入这个场景所有的组件，有了自动配置类，就免去了手动编写配置和注入功能组件
+	从/Mate-INF/spring-factories读取对应的XXAutoConfiguration
+	
+	以HttpEncodingAutoConfiguration为例解释自动配置原理
+	@Configuration			//指示这是一个配置类
+	//启动自动配置ConfigurationProperties，并指定配置类
+	@EnableConfigurationProperties(HttpProperties.class)
+	//Spring底层Conditional注解，根据不同的条件，如果满足指定的条件，整个配置类才会生效
+	//该配置判断当前应用是否为web应用，当前配置类生效
+	@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+	//判断当前项目有没有这个类，CharacterEncodingFilter，SpringMvc进行乱码解决的过滤器
+	@ConditionalOnClass(CharacterEncodingFilter.class)
+	//判断配置文件中是否存在某个配置，spring.http.encoding=enabled,如果不存在，判断也是生效的
+	@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)
+	public class HttpEncodingAutoConfiguration {
+	
+	自动配置类
+	
+	所有在配置文件中能配置的属性都是在xxxProperties类中封装着；配置文件能配置什么就可以
+	参照
+	
 @RunWith
 @SpringApplication 加载Spring应用程序上下文
+@SpringBootConfiguration:Spring Boot的配置类
+	标注在某个类上，表示这是一个Spring Boot的配置类
+
+Spring initializr:IDE都支持Spring的项目创建向导创建一个Spring Boot项目
+
+
+SpringWeb开发：
+----------------------------------
+	1、创建SpringBoot应用，选中需要的模块
+	2、SpringBoot已经默认将这些场景配置好了，只需要在配置文件中指定少量配置就可以运行起来
+	3、编写业务代码
+	
+WebMVC自动配置
+--------------------------
+	1、静态资源
+		@Override
+		public void addResourceHandlers(ResourceHandlerRegistry registry) {
+			if (!this.resourceProperties.isAddMappings()) {
+				logger.debug("Default resource handling disabled");
+				return;
+			}
+			Duration cachePeriod = this.resourceProperties.getCache().getPeriod();
+			CacheControl cacheControl = this.resourceProperties.getCache()
+					.getCachecontrol().toHttpCacheControl();
+			if (!registry.hasMappingForPattern("/webjars/**")) {
+				customizeResourceHandlerRegistration(registry
+						.addResourceHandler("/webjars/**")
+						.addResourceLocations("classpath:/META-INF/resources/webjars/")
+						.setCachePeriod(getSeconds(cachePeriod))
+						.setCacheControl(cacheControl));
+			}
+			String staticPathPattern = this.mvcProperties.getStaticPathPattern();
+			if (!registry.hasMappingForPattern(staticPathPattern)) {
+				customizeResourceHandlerRegistration(
+						registry.addResourceHandler(staticPathPattern)
+								.addResourceLocations(getResourceLocations(
+										this.resourceProperties.getStaticLocations()))
+								.setCachePeriod(getSeconds(cachePeriod))
+								.setCacheControl(cacheControl));
+			}
+		}
+	webjars:以jar包的格式引入静态资源
+	www.webjars.org
 
 控制层：
 -------------------------
-	@Controller
-	@RequestMapping
-	@ResponseBody
+	@Controller	控制层注解
+	@ResponseBody 控制返回数据直接写给浏览器，如果是对象则转换为json数据
+	@RestController == ResponseBody + Controller
+	@RequestMapping 将所有的方法都映射到 ‘/’ 这个Url上面
+		动态链接 /fetch/{id} 这条动态链接 可以通过 @PathVariable 将{id}里面的值传递到id属性
+		@RequestMapping(value="/fetch/{id}",method=RequestMethod.GET)
+		String getDynamicUriValue(@PathVariable String id)
 
 定义实体类
 ----------------------------------------------
@@ -59,13 +336,7 @@ springboot精要
 	通过继承JpaRepository<Entity,Key>，来实现对对象的增删改查
 	直接继承可以继承18个常用的持久化操作类型
 	
-定义web界面
-------------------------------------------
-	@Controller 这样的注解在进行配置的时候会自动化创建一个Bean
-	@RequestMapping 将所有的方法都映射到 ‘/’ 这个Url上面
-		动态链接 /fetch/{id} 这条动态链接 可以通过 @PathVariable 将{id}里面的值传递到id属性
-		@RequestMapping(value="/fetch/{id}",method=RequestMethod.GET)
-		String getDynamicUriValue(@PathVariable String id)
+	
 
 自动配置中使用的条件注解
 -------------------------
@@ -76,26 +347,3 @@ springboot精要
 @ConditionalOnExpression			给定的Spring Expression表达式计算结果
 @conditionalOnJava				java的版本匹配特定值或者一个范围值
 @ConditionalOnJndi				
-
-application.properties/application.yml
----------------------------------------------
-	spring默认配置文件，可以从classpath加载该配置文件
-	
-SpringBoot属性资源优先级
------------------------------
-	1、命令行参数
-	2、java:comp/env里的JNDI属性
-	3、jvm系统属性
-	4、操作系统环境变量
-	5、随机生成的带random.*前缀的属性
-	6、应用程序以外的application.properties或者application.yml文件
-	7、打包在应用程序内的application.properties或者application.yml文件
-	8、通过@PropertySource标注的属性源
-	9、默认属性
-	
-application.properties或者application.yml文件存在位置
-------------------------------------------------------------
-	1、外置，在相对于应用程序运行目录的/config子目录
-	2、外置，在应用程序的目录里
-	3、内置，在config包内
-	4、内置，在Classpath根目录
