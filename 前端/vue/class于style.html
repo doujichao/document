@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie-edge">
+        <title>class与style</title>
+        <script src="https://unpkg.com/vue/dist/vue.js"></script>
+        <style>
+            .green{
+                background: #bfa;
+            }
+            .active1{
+                background: #fab;
+            }
+            .font-color{
+                color: #fab;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <p class="green" :class="{'active1':isActive}">背景色背景色</p>
+            <button @click="isActive=!isActive">切换颜色</button>
+            <p :class="[isActive ? 'green' : '' , 'font-color']">class绑定数组形式</p>
+            <hr>
+            <p v-bind:style="{color:activeColor,fontSize:font+'px'}">直接写</p>
+            <p v-bind:style="styleObject">绑定到一个样式对象</p>
+            <p v-bind:style="[styleObject,styleObject2]">多个样式应用到同一个元素上</p>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data:{
+                    isActive:false,
+                    activeColor:'#498000',
+                    fontSize:18,
+                    styleObject:{
+                        color:'#000498',
+                        fontSize:'18px'
+                    },
+                    styleObject2:{
+                        padding:'50px'
+                    }
+                }
+            });
+        </script>
+    </body>
+
+</html>
