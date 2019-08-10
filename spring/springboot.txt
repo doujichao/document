@@ -314,6 +314,37 @@ WebMVC自动配置
 		}
 	webjars:以jar包的格式引入静态资源
 	www.webjars.org
+	2、/** 访问当前项目的任何资源(静态资源文件夹)
+		classpath:/MATE-INF/resources 
+		classpath:/resources
+		classpath:/static/	
+		classpath:/public
+		/	当前项目的根路径
+		localhost:8080/abc===去静态资源文件夹里面找abc
+	3、欢迎页；静态资源文件夹下的所有index.html页面，被/**映射
+	4、所有的**/favicon.ico都在静态资源文件夹下找
+	
+	自定义静态文件夹的路径，spring.resources.static-location=
+		
+thymeleaf:语法规则
+---------------------------------
+	Variable Expressions: ${...}获取变量
+		1、获取对象的属性
+		2、调用方法
+		3、使用内置的基本对象：
+			#ctx : the context object.
+			#vars: the context variables.
+			#locale : the context locale.
+			#request : (only in Web Contexts) the HttpServletRequest object.
+			#response : (only in Web Contexts) the HttpServletResponse object.
+			#session : (only in Web Contexts) the HttpSession object.
+			#servletContext : (only in Web Contexts) the ServletContext object.
+		4、内置的一些工具对象
+	Selection Variable Expressions: *{...}选择器表达式和${...}类似
+		补充功能
+	Message Expressions: #{...}获取国际化内容
+	Link URL Expressions: @{...}定义URL地址，可以省略主机名和项目名，本地项目
+	Fragment Expressions: ~{...}片段文档引用表达式
 
 控制层：
 -------------------------
