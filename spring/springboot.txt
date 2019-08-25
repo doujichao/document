@@ -346,6 +346,40 @@ thymeleaf:语法规则
 	Link URL Expressions: @{...}定义URL地址，可以省略主机名和项目名，本地项目
 	Fragment Expressions: ~{...}片段文档引用表达式
 
+SpringBoot自动配置好了SpringMVC
+1、ContentNegotiatingViewResolver和BeanNameViewResolver
+	自动配置了ViewResolver（视图解析器：根据方法的返回值得到视图对象，视图对象决定如何渲染）
+	ContentNegotiatingViewResolver：获取所有的视图解析器
+	如何定制：我们可以自己给容器中添加一个视图解析器，自动将其组合进来
+2、自动注册了Converter，GenericConverter，Formatter
+3、MessageConverter，
+	HttpMessageConverter：SpringMVC用来转换Http请求和响应的，User---Json
+4、MessageCodesResovlver定义错误代码生成规则
+5、ConfiguratbleWebBindingInitializer：
+	初始化WebDataBinder
+	请求数据==JavaBean
+	
+扩展自己的SpringMVC配置
+-------------------------------
+	编写一个SpringMVC的配置类继承WebMvcConfigurereAdapter（5.0之后WebMvcConfigurer）,不能标注@EnableWebMvc
+	原理：
+		1、WebMvcAutoConfiguration是SpriingMVC的自动配置类
+		2、在做其他自动配置的时候，自动导入EnableWebMvcConfiguration.class
+		@EnableWebMvc作用，我们全面接管webmvc的配置，自动配置失效
+
+国际化配置
+-------------------------------
+SpringBoot自动配置好了国际化资源的配置ResourceBundleMessageSource		
+	我们的国际化配置文件可以默认配置在类路径下叫messages.properties
+	
+	spring.message.basename=i18n.login
+	spring通过区域信息解析器来解析语言格式Local，LocalResolver
+	默认是根据请求头的Accept-Encoding:的信息来解析LocaL
+
+登陆：模板引擎页面修改之后，要实时生效
+	1、禁用模板引擎的缓存
+	2、页面修改完成以后，ctrl+F9重新编译
+	
 控制层：
 -------------------------
 	@Controller	控制层注解
@@ -355,6 +389,11 @@ thymeleaf:语法规则
 		动态链接 /fetch/{id} 这条动态链接 可以通过 @PathVariable 将{id}里面的值传递到id属性
 		@RequestMapping(value="/fetch/{id}",method=RequestMethod.GET)
 		String getDynamicUriValue(@PathVariable String id)
+
+拦截器：
+------------------------
+	
+
 
 定义实体类
 ----------------------------------------------

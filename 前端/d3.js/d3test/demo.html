@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="GBK">
+    <title>拖拽操作</title>
+</head>
+
+<style>
+	
+	.tooltip{
+		position: absolute;
+		width: 120;
+		height: auto;
+		font-family: Microsoft YaHei;
+		font-size: 14px;
+		text-align: center;
+		border: 1px solid rgb(31, 119, 180);
+		background-color: white;
+		border-radius: 4px;
+	}
+
+</style>
+
+<body onload="onload()" onmouseup="bodyMoseup(event)">
+	<div style="    width: 100%;  height: 50px; background: #03A9F4;">
+	<div onmousedown="mousedownTarget()">拖到到画布看看</div> 
+
+	<div id="huabu" width="960" height="500"></div>
+</body>
+<script src="./js/d3.min.js"></script>
+<script>
+
+	var isDragToSVG = 0;
+	var selectedTarget = "";   // 记录选择的节点
+	var color = d3.scale.category20()
+	function mousedownTarget(){
+		isDragToSVG = 1;
+	}
+	
+	function bodyMoseup(event){
+		if (isDragToSVG == 1 ){
+			isDragToSVG =0;
+		}
+		
+	}
+	
+	var width = 960,  height = 500;
+    var svg = d3.select("#huabu").append("svg")
+            .attr("width",width)
+            .attr("height",height)
+			.attr("fill","rgb(31, 119, 180)")
+			.on("mouseup" ,function(){   //注册鼠标松开回调事件
+					mouseupaction();
+				}
+			)
+	
+	var zoom = d3.behavior.zoom()  
+            .scaleExtent([1, 10])  //缩放范围
+            .on("zoom", zoomed);  	
+			
+	function zoomed() {  
+		container.attr("transform",    //此处的container是之前svg下 append('g')后返回的对象
+			"translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");  
+	}  
+	
+	//var container = svg.call(zoom);   //相当于缩放的容器
+	
+	
+	var tooltip = d3.select("#huabu")
+					.append("div")
+					.attr("class","tooltip")
+					.style("opacity",0.0);
+
+	//鼠标松开时在画布上绘制一个节点
+	function mouseupaction(){
+		var x= d3.event.x;
+		var y = d3.event.y;
+		if (isDragToSVG == 1){
+			var id = guid(); 
+			var textid = guid();
+			var imageid = guid();
+			
+			var node = {cx:x,cy:y,r:14,id:id,start:"",end:"",lable:"新加模型",textid:textid,imageid:imageid,icon:"./icon/1111.png"};
+
+			drawNode(node);
+		}
+		
+		isDragToSVG = 0
+		
+	}
+	
+	
+	
+	
+	function getDis(x1,y1,x2,y2){
+		var dx = Math.abs(x1 - x2);
+		var dy = Math.abs(y1 - y2);
+		var dis = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+		return dis;
+
+    }
+	
+	
+
+	//用于生成uuid
+    function S4() {
+        return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    }
+    function guid() {
+        return "uuid"+(S4()+S4()+S4()+S4());
+	}
+	
+	/*
+		判断两点是否可以连线
+	*/
+	function canJoin(startTarget,endTarget){
+		if (startTarget.attr("id") == endTarget.attr("id")){   //同一个点不能连线
+			return false;
+		}
+		
+		if (haveRelation(startTarget,endTarget)){  //已有连线的点不需要再连线
+			return false;
+		}
+		
+		if (haveClosedLoop(startTarget,endTarget)){  //连线后形成闭合环路的不能连线，也就是一个点不能同时成为另一个点的输入（包括跨节点）和输出（包括跨节点）
+			return false;
+		}
+		return true;
+	}
+	
+	function haveClosedLoop(startTarget,endTarget){  //是否连线后形成闭合环路，也就是一个点同时成为另一个点的输入（包括跨节点）和输出（包括跨节点）
+		var endLintid = startTarget.attr("end");
+		var isClosedLoop = false;
+		if (endLintid && endLintid != ""){
+			var lineIds = endLintid.split(",");
+			for (var i=0; i < lineIds.length; i++){
+				lineid = lineIds[i]
+				if (lineid && lineid != ""){
+					var line = d3.select("#"+lineid);
+					if (line && !line.empty()){
+						var startnodeid = line.attr("startnodeid");
+						var startNode = d3.select("#"+startnodeid);
+						if (startNode && !startNode.empty() && startNode.attr("id") == endTarget.attr("id")){
+							isClosedLoop = true;
+							break;
+						}else{
+							isClosedLoop =  haveClosedLoop(startNode,endTarget);   //使用递归方式逐步遍历相关的所有节点
+						}
+					}
+				}
+			}
+		}
+		return isClosedLoop;
+	}
+	
+	
+	function haveRelation(startTarget,endTarget){  //是否已有连线
+		var start1 = startTarget.attr("start");
+		var end1 = startTarget.attr("end");
+		var start2 = endTarget.attr("start");
+		var end2 = endTarget.attr("end");
+		if (start1 && start1 != "" && end2 && end2 != ""){
+			var start1Strs = start1.split(",");
+			var end2Strs = end2.split(",");
+			var a = "";
+			var b = "";
+			for (var i=0; i < start1Strs.length  ; i++ ){
+				a = start1Strs[i];
+				for (var j=0; j < end2Strs.length  ; j++){
+					b = end2Strs[j];
+					if ( a != "" &&  a == b){
+						return true;
+					}
+				}
+			}
+		}
+		
+		if (start2 && start2 != "" && end1 && end1 != ""){
+			var start2Strs = start2.split(",");
+			var end1Strs = end1.split(",");
+			var a = "";
+			var b = "";
+			for (var i=0; i < start2Strs.length  ; i++ ){
+				a = start2Strs[i];
+				for (var j=0; j < end1Strs.length  ; j++){
+					b = end1Strs[j];
+					if ( a != "" &&  a == b){
+						return true;
+					}
+				} 
+			}
+		}
+		
+		return false;
+	}
+	
+	function getFocusCircl(target){  //获取真实的选中圆圈，因为所有的文字、图片、连线信息都保存在Circl里
+		var id = target.attr("id");
+		var tagName = target[0][0].tagName;
+		if (tagName=="image"){
+			id = target.attr("circlid");
+			target = d3.select("#"+id);
+		}
+		return target;
+	}
+	
+	function moveNodeByCircl(circl,x,y){
+		var start = circl.attr("start");
+		var end = circl.attr("end");
+		var textid = circl.attr("textid");
+		var imageid = circl.attr("imageid");
+		circl.attr("cx", x).attr("cy", y);
+				
+		if (start && start != ""){  //移动以该节点为始点的连线
+			var start1Strs = start.split(",");
+			for (var i=0; i < start1Strs.length  ; i++ ){
+				if (start1Strs[i] && start1Strs[i] != ""){
+					var startLine = d3.select("#"+start1Strs[i]);
+					startLine.attr("x1",parseFloat(circl.attr("cx"))+parseFloat(circl.attr("r"))+6)
+							 .attr("y1",circl.attr("cy"));
+					var startpoint = d3.select("#"+startLine.attr("startpointid"));
+					startpoint.attr("cx", parseFloat(startLine.attr("x1"))-2).attr("cy",startLine.attr("y1"))
+				}
+			}
+		}
+			
+		if (end && end != ""){ //移动以该节点为终点的连线
+			var end1Strs = end.split(",");
+			for (var i=0; i < end1Strs.length  ; i++ ){
+				if (end1Strs[i] && end1Strs[i] != ""){
+					var endtLine = d3.select("#"+end1Strs[i]);
+					endtLine.attr("x2",circl.attr("cx")-circl.attr("r")-8).attr("y2",circl.attr("cy"));
+					var endpoint = d3.select("#"+endtLine.attr("endpointid"));
+					endpoint.attr("cx", parseFloat(endtLine.attr("x2"))+2).attr("cy",endtLine.attr("y2"))
+				}
+			}
+		}
+					
+		if (textid && textid !=""){
+			var text =  d3.select("#"+textid);
+			text.attr("x",circl.attr("cx"));
+			text.attr("y",parseFloat(circl.attr("cy"))+parseFloat(circl.attr("r"))+10);
+		}
+		
+		if (imageid && imageid !=""){
+			var text =  d3.select("#"+imageid);
+			text.attr("x",circl.attr("cx")-8);
+			text.attr("y",circl.attr("cy")-8);
+		}
+	}
+	
+	function joinNodes(selectedTarget,target){
+		var lineid = guid();
+		var start1 = selectedTarget.attr("start");
+		var end2 = target.attr("end");
+		target.attr("end",end2+","+lineid);
+		selectedTarget.attr("start",start1+","+lineid);
+		var line = {};
+		line.id = lineid;
+		line.startnodeid = selectedTarget.attr("id");
+		line.endnodeid = target.attr("id");
+		drawLine(line);
+		
+	}
+	
+	//定义拖拽函数
+    var drag = d3.behavior.drag()
+            .on("drag",dragmove)
+    function dragmove(d){
+		tooltip.style("opacity",0.0); //拖动时不需要显示提醒信息
+		target = getFocusCircl(d3.select(this));
+		var cx= target.attr("cx");
+		var cy= target.attr("cy");
+		var r = target.attr("r");
+		var evx = d3.event.x;
+		var evy = d3.event.y;
+		if (getDis(cx,cy,evx,evy) > r/5 ){  //防止抖动
+			moveNodeByCircl(target,evx,evy);//	根据拖动的Circl同时移动节点，以及节点相关的图片、文字、连线
+	    }
+		
+    }
+	
+	//定义点击事件
+	function nodeClick(){
+	    var target = getFocusCircl(d3.select(this)); 
+		if (selectedTarget  && selectedTarget != "" && !selectedTarget.empty() ){  //如果有选中节点，则进行节点连线
+		
+			if( canJoin(selectedTarget,target)){
+				joinNodes(selectedTarget,target); //给两个节点添加连线
+			
+			}
+			svg.selectAll("circle.nodecircle").attr("fill","rgb(31, 119, 180)");  //把上一次选中对象置为普通颜色
+			selectedTarget = "";
+			
+		}else{
+			svg.selectAll("circle.nodecircle").attr("fill","rgb(31, 119, 180)");  //把上一次选中对象置为普通颜色
+			target.attr("fill","#e91e63")  ;
+			selectedTarget = target;
+		
+			
+			
+		}
+
+	}
+	
+	//连线鼠标悬停事件
+	function lineMouseover(){
+		tooltip.html("双击可删除当前连线")
+			.style("left", (d3.event.pageX) + "px")
+			.style("top", (d3.event.pageY + 20) + "px")
+			.style("opacity",1.0);
+	}
+	
+	//连线鼠标离开目标事件
+	function lineMouseleave(){
+		tooltip.style("opacity",0.0);
+	}
+	
+	function lineDbclick(){
+		var target = d3.select(this);
+		
+		var lineId = target.attr("id");
+		removeLineByLineId(lineId);
+		tooltip.style("opacity",0.0);
+	}
+	
+	//节点鼠标悬停事件
+	function nodeMouseover(){
+		tooltip.html("单击可进行连线操作或查看该节点参数，双击可删除当前节点")
+			.style("left", (d3.event.pageX) + "px")
+			.style("top", (d3.event.pageY + 20) + "px")
+			.style("opacity",1.0);
+	}
+	
+	//节点鼠标离开目标事件
+	function nodeMouseleave(){
+		//var target = getFocusCircl(d3.select(this));
+		tooltip.style("opacity",0.0);
+	}
+	
+	function nodeDbclick(){
+		//  TODO 需要加一个确认操作
+		var target = getFocusCircl(d3.select(this));
+		removeNodeByCirclId(target.attr("id"))
+		selectedTarget = "";   // 选中目标置为空
+		tooltip.style("opacity",0.0);  //删除节点后把提示语隐藏掉
+	}
+	
+
+	function removeNodeByCirclId(circlId){  //包括删除与节点关联的线以及相关线前后节点的关系信息
+		target = d3.select("#"+circlId);
+		var textid = target.attr("textid");
+		var imageid = target.attr("imageid")
+		d3.select("#"+textid).remove();
+		d3.select("#"+imageid).remove();
+		removeLineByCircl(target);
+		target.remove();
+	}
+	
+	function removeLineByCircl(circl){
+		var start = circl.attr("start");
+		var end = circl.attr("end");
+		if (start && start != ""){
+			var start1Strs = start.split(",");
+			for (var i=0; i < start1Strs.length  ; i++ ){
+				if (start1Strs[i] && start1Strs[i] != ""){
+					removeLineByLineId(start1Strs[i]);
+				}
+			}
+		}
+				
+		if (end && end != ""){
+			var end1Strs = end.split(",");
+			for (var i=0; i < end1Strs.length  ; i++ ){
+				if (end1Strs[i] && end1Strs[i] != ""){
+					removeLineByLineId(end1Strs[i]);
+				}
+			}
+		}
+	}
+	
+	function removeLineByLineId(lineId){	
+		var endtLine = d3.select("#"+lineId);
+		if (endtLine  && !endtLine.empty()){
+			var startnodeid = endtLine.attr("startnodeid");
+			var startnode = d3.select("#"+startnodeid);
+			if (startnode && !startnode.empty()){  
+				startnode.attr("start",startnode.attr("start").replace(lineId,"").replace(",,",","));
+			}
+			
+			var endnodeid = endtLine.attr("endnodeid");
+			var endnode = d3.select("#"+endnodeid);
+			if (endnode && !endnode.empty()){
+				endnode.attr("end",endnode.attr("end").replace(lineId,"").replace(",,",","));
+			}
+			
+			var startpointid = endtLine.attr("startpointid");
+			var startpoint = d3.select("#"+startpointid);
+			if (startpoint && !startpoint.empty()){  
+				startpoint.remove();
+			}
+			
+			var endpointid = endtLine.attr("endpointid");
+			var endpoint = d3.select("#"+endpointid);
+			if (endpoint && !endpoint.empty()){
+				endpoint.remove();
+			}
+			
+			endtLine.remove();
+			
+			
+		}
+	}
+	
+	//定义箭头
+	var defs = svg.append("defs");
+	var arrowMarker = defs.append("marker")
+						.attr("id","arrow")
+						.attr("markerUnits","strokeWidth")
+					    .attr("markerWidth","12")
+                        .attr("markerHeight","8")
+						.attr("stroke", "rgb(31, 119, 180)") //箭头线段颜色
+                        .attr("viewBox","0 0 12 12")     
+                        .attr("refX","6")
+                        .attr("refY","6")
+						.attr("orient","auto")
+	var arrow_path = "M0,2 L6,6 L0,10 z";
+						
+	arrowMarker.append("path")
+			.attr("d",arrow_path)
+			.attr("fill","rgb(31, 119, 180)"); //箭头填充颜色
+ 
+ 
+
+		
+	
+		
+	
+	function onload(){
+		//绘制圆形
+		var nodes =[{cx:150,cy:200,r:14,id:"circ1",start:"line1",end:"",lable:"模型1",textid:"text1",imageid:"image1",icon:"./icon/1.png"},{cx:250,cy:200,r:14,id:"circ2",start:"line2",end:"line1",lable:"模型2",textid:"text2",imageid:"image2",icon:"./icon/2.jpg"},{cx:350,cy:400,r:14,id:"circ3",start:"line3",end:"line2",lable:"模型3" ,textid:"text3",imageid:"image3",icon:"./icon/3.jpg"},{cx:450,cy:400,r:14,id:"circ4",start:"",end:"line3",lable:"模型4",textid:"text4",imageid:"image4",icon:"./icon/4.jpg"}];
+		
+		var lines = [{startnodeid:"circ1",endnodeid:"circ2",id:"line1"},{startnodeid:"circ2",endnodeid:"circ3",id:"line2"},{startnodeid:"circ3",endnodeid:"circ4",id:"line3"}];
+		
+		drawCircles(nodes);  //需要先绘制节点，然后再绘制连线
+		drawLines(lines);
+	}
+
+    
+	function drawCircles(circles,lines){  
+	
+		//绘制圆圈
+		svg.selectAll("circle")
+            .data(circles)
+            .enter()
+            .append("circle")
+            .attr("cx",function(d){return d.cx})
+            .attr("cy",function(d){return d.cy})
+            .attr("r", function (d) {
+                return d.r
+            })
+			.style("cursor","pointer")
+			.attr("id",function(d){return d.id})
+			.attr("start",function(d){return d.start})
+			.attr("end",function(d){return d.end})
+			.attr("textid",function(d){return d.textid})
+			.attr("imageid",function(d){return d.imageid})
+			.attr("class","nodecircle")
+            .attr("fill",color)  
+            .call(drag)
+			.on("click", nodeClick)   //  注册点击事件	
+			.on("mouseover",nodeMouseover)
+			.on("mouseleave",nodeMouseleave) 
+			.on("dblclick",nodeDbclick) 
+			;	
+	
+		//绘制节点描述
+		var svg_text = svg.selectAll("text")
+			.data(circles)
+			.enter()
+			.append("text")
+			.style("fill","rgb(31, 119, 180)")    //文字颜色
+			.style("font-size","14")    //文字颜色
+			.style("font-family","Microsoft YaHei")
+			.attr("dominant-baseline","middle")
+			.attr("id",function(d){   return d.textid})
+			.attr("x",function(d){return d.cx})
+			.attr("y",function(d){return d.cy+d.r+10})
+			.attr("text-anchor", "middle")//在圆圈中加上数据
+			.text(function(d){return d.lable});
+	
+		svg.selectAll("image").data(circles).enter().append("svg:image")
+			.attr("xlink:href",function(d){return d.icon})    //节点图片
+			.attr("width",16)
+			.attr("height",16)
+			.style("cursor","pointer")
+			.attr("id",function(d){return d.imageid})
+			.attr("circlid",function(d){return d.id})
+			.attr("x",function(d){return d.cx-8})
+			.attr("y",function(d){return d.cy-8})
+			.call(drag)
+			.on("click", nodeClick) 
+			.on("mouseover",nodeMouseover)
+			.on("mouseleave",nodeMouseleave)
+			.on("dblclick",nodeDbclick) 
+			;  //注册点击事件	
+	  }
+	  
+	/*
+	*批量绘制连线 lines = [{startnodeid:"circ1",endnodeid:"circ2",id:"line1"}]
+	*/	
+	function drawLines(lines){  
+	
+	  var linedates = [];
+	  if (lines && lines.length > 0 ){
+		for (var j = 0; j < lines.length; j ++ ){
+			var linedate = lines[j];
+			
+			if (!linedate || JSON.stringify(linedate) == "{}"){
+				continue;
+			}
+			
+			var startNodeId = linedate.startnodeid;
+			if (!startNodeId || startNodeId == ""){
+				continue;
+			}
+			
+			var startNode = d3.select("#"+startNodeId);
+			
+			if (!startNode || startNode.empty()){
+				continue;
+			}
+			
+			var endNodeId = linedate.endnodeid;
+			if (!endNodeId || endNodeId == ""){
+				continue;
+			}
+			
+			var endNode = d3.select("#"+endNodeId);
+			
+			if (!endNode || endNode.empty()){
+				continue;
+			}
+			
+			var startPointId = guid();
+			var endpointid = guid();
+			
+			var line = {};
+			line.x1 = parseFloat(startNode.attr("cx"))+parseFloat(startNode.attr("r"))+6; 
+			line.y1 = startNode.attr("cy"); 
+			line.x2 = endNode.attr("cx")-endNode.attr("r")-6;
+			line.y2 = endNode.attr("cy"); 
+			line.startpointid =  startPointId;
+			line.endpointid = endpointid;
+			line.startnodeid =  startNodeId;
+			line.endnodeid = endNodeId;
+			line.id = linedate.id;
+			linedates.push(line);
+			
+			drawLinePoint(line);  //绘制连线的前后两个点
+			
+		}
+	  }
+
+	//绘制连线
+	  svg.selectAll("line")
+            .data(linedates)
+            .enter().append("line")
+			.attr("id",function(d){return d.id})
+			.attr("startnodeid",function(d){return d.startnodeid})
+			.attr("endnodeid",function(d){return d.endnodeid})
+			.attr("startpointid",function(d){return d.startpointid})
+			.attr("endpointid",function(d){return d.endpointid})
+            .attr("x1",function(d){return d.x1})
+            .attr("y1", function(d){return d.y1})
+            .attr("x2", function(d){return d.x2})
+            .attr("y2", function(d){return d.y2})
+            .attr("stroke", "rgb(31, 119, 180)")   //线段颜色
+            .attr("stroke-width", "1.5px")  //线段的大小
+			.attr("marker-end","url(#arrow)")//新加箭头
+			.style("cursor","pointer")
+			.on("mouseover",lineMouseover)
+			.on("mouseleave",lineMouseleave)
+			.on("dblclick",lineDbclick) 
+			;     
+	}
+	
+	function drawNode(node){
+		
+		if (!node || JSON.stringify(node) == "{}"){
+			return ;
+		}
+		
+		svg.append("circle")
+			.attr("cx",node.cx)
+			.attr("cy",node.cy)
+			.attr("r", 14)
+			.attr("fill","rgb(31, 119, 180)")  
+			.attr("start","")
+			.attr("end","")
+			.attr("textid",node.textid)
+			.attr("imageid",node.imageid)
+			.attr("id",node.id)
+			.attr("class","nodecircle")
+			.style("cursor","pointer")
+			.call(drag)
+			.on("click", nodeClick) //  注册点击事件
+			.on("dblclick",nodeDbclick) 
+			.on("mouseover",nodeMouseover)
+			.on("mouseleave",nodeMouseleave) 
+			;
+		svg.append("text")
+			.style("fill","rgb(31, 119, 180)")    //文字颜色
+			.style("font-size","14")    //文字颜色
+			.style("font-family","Microsoft YaHei")
+			.attr("dominant-baseline","middle")
+			.attr("id",node.textid)
+			.attr("x",node.cx)
+			.attr("y",node.cy+22)
+			.attr("text-anchor", "middle")//在圆圈中加上数据
+			.text("新加一个节点")
+			;
+
+		svg.append("svg:image")
+			.attr("xlink:href",node.icon)    //节点图片
+			.attr("width",16)
+			.attr("height",16)
+			.attr("id",node.imageid)
+			.attr("circlid",node.id)
+			.attr("x",node.cx-8)
+			.attr("y",node.cy-8)
+			.style("cursor","pointer")
+			.call(drag)
+			.on("click", nodeClick)  //注册点击事件
+			.on("dblclick",nodeDbclick) 
+			.on("mouseover",nodeMouseover)
+			.on("mouseleave",nodeMouseleave) 
+			;
+	}
+	
+	function drawLine(line){
+		if (!line || JSON.stringify(line) == "{}"){
+			return;
+		}
+		
+		var startNodeId = line.startnodeid;
+		if (!startNodeId || startNodeId == ""){
+			return;
+		}
+		
+		var startNode = d3.select("#"+startNodeId);
+		
+		if (!startNode || startNode.empty()){
+			return;
+		}
+		
+		var endNodeId = line.endnodeid;
+		if (!endNodeId || endNodeId == ""){
+			return;
+		}
+		
+		var endNode = d3.select("#"+endNodeId);
+		
+		if (!endNode || endNode.empty()){
+			return;
+		}
+		
+		line.x1 = parseFloat(startNode.attr("cx"))+parseFloat(startNode.attr("r"))+6;
+		line.y1 = startNode.attr("cy");
+		line.x2 = parseFloat(endNode.attr("cx"))-parseFloat(endNode.attr("r"))-6;
+		line.y2 = endNode.attr("cy");
+		
+		var startPointId = guid();
+		var endpointid = guid();
+		
+		line.startpointid = startPointId;
+		line.endpointid = endpointid;
+		drawLinePoint(line);
+		svg.append("line")
+			.attr("id",line.id)
+			.attr("startnodeid",startNodeId)
+			.attr("endnodeid",endNodeId)
+			.attr("startpointid",line.startpointid )
+			.attr("endpointid",line.endpointid)
+			.attr("x1",line.x1)
+			.attr("y1", line.y1)
+			.attr("x2", line.x2)
+			.attr("y2", line.y2)
+			.attr("stroke", "rgb(31, 119, 180)")   //线段颜色
+			.attr("stroke-width", "1.5px")  //线段的大小
+			.attr("marker-end","url(#arrow)")
+			.style("cursor","pointer")
+			.on("mouseover",lineMouseover)      //新加箭头
+			.on("mouseleave",lineMouseleave)
+			.on("dblclick",lineDbclick) 
+			;
+		
+
+	}
+	
+	function drawLinePoint(line){
+		
+		var startPoint = {cx:line.x1-2,cy:line.y1,r:2,id:line.startpointid,lineid:line.id};
+		var endPoint = {cx:parseFloat(line.x2)+2,cy:line.y2,r:2,id:line.endpointid,lineid:line.id};
+		/*
+		svg.append("svg:image")
+			.attr("xlink:href","./icon/point.png")    //节点图片
+			.attr("width",6)
+			.attr("height",6)
+			.attr("id",startPoint.id)
+			.attr("lineid",startPoint.lineid)
+			.attr("x",startPoint.cx-3)
+			.attr("y",startPoint.cy-3)
+			.style("cursor","pointer")
+			.on("mouseover",lineMouseover)
+			.on("mouseleave",lineMouseover) 
+			.on("dblclick",lineDbclick) 
+			;
+			
+		svg.append("svg:image")
+			.attr("xlink:href","./icon/point.png")    //节点图片
+			.attr("width",6)
+			.attr("height",6)
+			.attr("id",endPoint.id)
+			.attr("lineid",startPoint.lineid)
+			.attr("x",endPoint.cx-3)
+			.attr("y",endPoint.cy-3)
+			.style("cursor","pointer")
+			.on("mouseover",lineMouseover)
+			.on("mouseleave",lineMouseover) 
+			.on("dblclick",lineDbclick) 
+			;
+		*/
+		//绘制圆圈
+		svg.append("circle")
+			.attr("cx",startPoint.cx)
+			.attr("cy",startPoint.cy)
+			.attr("r", startPoint.r)
+			.style("cursor","pointer")
+			.attr("id",startPoint.id)
+			.attr("lineid",startPoint.lineid)
+			.attr("class","linepoint")
+			.attr("fill","#fff") 
+			.attr("stroke", "rgb(31, 119, 180)") 				
+			.on("mouseover",lineMouseover)
+			.on("mouseleave",lineMouseover) 
+			.on("dblclick",lineDbclick) 
+			;	
+
+		//绘制圆圈
+		svg.append("circle")
+			.attr("cx",endPoint.cx)
+			.attr("cy",endPoint.cy)
+			.attr("r", endPoint.r)
+			.style("cursor","pointer")
+			.attr("id",endPoint.id)
+			.attr("lineid",endPoint.lineid)
+			.attr("class","linepoint")
+			.attr("fill","#fff")  
+			.attr("stroke", "rgb(31, 119, 180)") 
+			.on("mouseover",lineMouseover)
+			.on("mouseleave",lineMouseover) 
+			.on("dblclick",lineDbclick) 
+			;	
+			
+	}
+	
+</script>
+
+</html>
