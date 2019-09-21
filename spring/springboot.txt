@@ -354,10 +354,13 @@ SpringBoot自动配置好了SpringMVC
 2、自动注册了Converter，GenericConverter，Formatter
 3、MessageConverter，
 	HttpMessageConverter：SpringMVC用来转换Http请求和响应的，User---Json
+	自己添加的格式化器，转换器只需要放入容器中即可
 4、MessageCodesResovlver定义错误代码生成规则
 5、ConfiguratbleWebBindingInitializer：
 	初始化WebDataBinder
 	请求数据==JavaBean
+	
+	
 	
 扩展自己的SpringMVC配置
 -------------------------------

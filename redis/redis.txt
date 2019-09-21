@@ -1,0 +1,169 @@
+redis： Remote Dictionary Service 远程字典服务
+
+redis作用：
+1、记录帖子的点赞数，评论数和点击数（hash）
+2、记录用户的帖子id列表，便于快速显示用户的帖子列表（zset）
+3、记录帖子的标题、摘要、作者和封面信息和用户列表页展示（hash）
+4、记录帖子的点赞用户id列表，评论id列表，用于显示和去重计数（zset）
+5、缓存近期热帖内容（帖子内容空间占用比较大），减少数据库压力（hash）
+6、记录帖子的相关文章id，根据内容推荐相关帖子（list）
+7、如果帖子id是整数自增的，可以使用redis来分配帖子id（计数器）
+8、收藏集和帖子之间的关系（zset）
+9、记录热榜帖子的id列表，总热榜和分类热榜
+10、缓存用户行为历史，进行恶意行为过滤（zset，hash）
+
+安装（四种方式）：
+------------------------
+	1、Docker方式
+	// 拉取镜像
+	docker pull redis 
+	//运行redis容器
+	docker run --name myredis -d -p6379 redis 
+	//执行容器中的redis-cli，可以执行使用命令行操作redis
+	2、github源码编译 
+	//下载源码
+	git clone --branch 2.8 --dept 1  git@github.com:antirez/redis.git 
+	cd redis
+	make 
+	cd src
+	//运行服务器
+	./redis-server --daemonize yes
+	//运行命令行
+	
+注意事项：
+1、字符串的最大长度为512M	
+2、自增有范围是无符号长整数的最大最小值（signed long）
+	
+redis基础数据结构
+-----------------------------	
+	1、String（字符串）
+	2、list（列表）
+	3、set（集合）
+	4、hash （哈希）
+	5、zset（有序集合）
+
+容器型数据结构的通用规则：
+--------------------------------
+	1、create if not exists
+	2、drop if no elements
+	3、过期时间，每种数据结构都是可以设置过期时间的
+		使用expire设置过期时间单位为s
+1、String（字符串操作）
+---------------------------------------
+set key value		将key value键值对存入redis
+get key 			根据key获取值，不能模糊匹配
+exits key 			判断key是否存在，不能模糊匹配
+del key				根据key删除值，不能模糊匹配
+mset key1 value1 key2 value2 ... 批量新增或修改键值对
+mget key1 key2 ..	批量获取值
+expire key time		设置key在time秒后失效
+setex key 5 value 设置key在time秒后失效 等价与set+expire
+setnx key value 	如果key不存在进行创建 
+
+如果value是一个整数，可以进行自增范围
+incr key			key的值自增1
+incrby key value  	key的值自增value
+
+2、list（列表）
+--------------------------------
+rpush key value1 value2 ..		右边入队
+rpop  key 						右边出队
+lpush key value1 value2 ...		左边入队
+lpup  key 						左边入队
+
+llen key 						队列key的长度
+lindex 	key num					取出链表key从左数第num个数字
+lrange books 0 -1				获取链表所有元素
+ltrim key start end 			删除start到end范围外的数字
+
+3、hash(字典)
+-----------------------------------------
+	hash相当于java语言中的hashMap是一个无需字典
+	重新hash，java的rehash过程在map足够大的时候进行，但是这是很耗费时间的，而redis
+	的rehash过程是渐进式方式，将新旧两个hash结构，在定时任务的时候抓紧将旧的hash转到
+	新的hash结构中
+	
+	缺点缺点：hash结构的存储消耗要高于单个字符串，到底使用hash还是字符串结构，需要根据实际情况分析
+	
+hset key field value 			将数据存到key的hash结构中，field为字段，value为字段下的值
+hgetall key 					获取hash结构的所有filed和值
+hget key field 				    获取key结构的field的值
+hmset key field1 value1	field2 vlaue2 ... 批量插入hash结构
+hincrby key field value			key的field的值自增value
+
+
+4、set（集合）
+----------------------------------
+	相当于java语言中的hashset，内部的键值对式无需且唯一的
+
+sadd  key value 				向set中添加一个key值为value
+smember key 					查询出set的所有值
+sismember key value 			查询某个value值是否存在	
+scard key 						查询所有的个数
+spop							弹出一个
+
+5、zset（有序列表）
+------------------------------------------------
+	类似于java的SortedSet和HashMap的集合,输入特定排序值score，将数据按照score进行排序
+zadd key score value 			 向zset中插入一条记录，score为score，值位value
+zrange key start end 			 查询出从start到end的值
+zrevrange key start end 		 查询出从end到start的值，倒叙排列
+zcard key 						 查询有序列表中个数
+zscore key value 				 查询出key中值位value的score
+zrangebyscore key start end withscores 根据分值区间便利set，inf 表示infinite无穷大
+zrem key value 					删除key中的value值
+
+跳跃列表
+0-----------------------------
+	zset的内部排序功能式通过跳跃列表的数据结构来实现的，
+	
+	
+分布式锁
+----------------------------
+	setnx lock:codehoole true	设置一个锁
+	del lock:codehoole 			删除一个锁
+可重入问题，超时问题
+注意：锁冲突问题方案：
+	1、直接抛出异常
+	2、休眠一段时间，重新尝试
+	3、将当前请求扔进一个队列延后处理
+	
+延时队列
+----------------------------------	
+	blpop 						阻塞弹出对象，如果没有对象的时候会陷入休眠
+	brpop						
+
+注意：空闲链接问题，redis长时间不链接会形成空闲连接，blpop和brpop会抛出异常，程序里面需要捕获异常
+		尝试重新链接
+
+位图数据结构：
+----------------------------------
+	用于记录比较频繁的时候，但是不太重要的数据，例如人们一年365天的签到记录
+setbit key offset 0|1	      设置字符串key的offset为0或者1
+getbit key offset 			  获取key的第offset位的值
+bitcount key start end 		  统计key从start到end有多少个1
+bitpos key 0|1 start end 	  统计key从start到end第一个0或者1式第几位
+
+bitfield三种指令 set，get，incrby
+bitfield key get uN start 	  统计key中从start开始取N位无符号数，u无符号数，i有符号数
+bitfield key set uN value	  将从start开始的N个位数替换为value
+bitfield key incrby uN start value 将key的从start开始的u位无符号数据自增value
+注意：bitfield提供三种溢出策略，1、折返（默认wrap）2、失败(fail)3、饱和阶段（sat）
+bitfield key overflow sat incrby u4 start value   采用sat策略进行溢出处理
+
+
+HyperLogLog:用户统计不精确的每日统计数，可去重
+-------------------------------
+	pfadd	 key user				新增一个
+	pfcount	 key 					获得统计数
+	pfmerge  destkey sourcekey	.. 将多个源key合并到同一个key中	
+	
+布隆过滤器：使用多个数组
+---------------------------
+	> docker pull redislabs/rebloom # 拉取镜像
+	> docker run -p6379:6379 redislabs/rebloom # 运行容器
+	> redis-cli # 连接容器中的 redis 服务
+bf.add key value 			插入key
+bf.exists key value 		判断value是否存在
+bf.madd key value1 value2 ..	插入多个值
+bf.mexists key value1 value2 .. 判断多个值是否存在
