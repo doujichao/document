@@ -1,0 +1,7 @@
+create or replace function func_calcTypeNum() return  
+  num_table pipelined is num_arr;
+begin
+  
+  return(FunctionResult);
+end func_calcTypeNum;
+/
