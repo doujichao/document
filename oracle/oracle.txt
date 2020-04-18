@@ -9,5 +9,155 @@
 	7、备份与恢复
 	8、数据库调整与优化
 	
+数据库主要有关系型数据库和对象型数据库
+----------------------------------------
+	关系型数据库一定是表或行的方式来进行存储数据
+	
+	网格计算
+	
+应用服务器IAS
+---------------------------
+	ias9i ias10g 11g
+	
+开发工具包ids
+
+其他产品
+-----------------------------
+	1、erp软件
+	2、elearing
+	3、data warehouse
+	4、bea 产品如weblogic
+	5、mysql
+	6、linux
+	7、others
+	
+	
+重点掌握工具sqlplus
+------------------
+	图形管理页面 http://localhost:1158/em
+	1、运行sql语句
+	2、查询、操作数据库的数据
+	3、管理数据库
+	4、基本特点
+		oracle独有的运行环境
+		有自己的一套sqlplus命令
+		在各个平台都可以运行
+		sqlplus命令和sql语句不一样
+		提供了标准的sql扩充命令的支持
+	5、http://localhost:5560/isqlplus	
+	
+数据库对象
+----------------------------
+	表 table：			将数据以行的方式存放在表下面
+	约束 constraint:	约束条件
+	视图 view:			查询语句的别名
+	索引 index：		标记那些行在哪些位置
+	同义词 synonym:		
+	存储过程 procedure:	
+	函数 function：
+	包 package：
+	触发器：trigger：
+	
+数据库安全
+---------------------
+	用户	user
+	方案	schema
+	权限	privilege
+	角色	role
+	配额	quota
+	
+数据库文件与存储
+--------------------------
+	数据文件 datafile：
+	表空间	 tablespace：段->区->块
+	控制文件 control file:记录Oracle的结构和行为
+	重做日志文件 redo log:
+	初始化参数文件 pfile spfile:
+	
+数据库网络访问
+---------------------
+	数据库名 db_name
+	实例名 	 instance_name
+	服务名	 service_name
+	链接字符串 ip:port/tnsname
+	服务命名 tnsname
+	监听器	  listener
+	
+1、需要会使用的工具
+------------------------
+	sqlplus 
+	
+2、如何访问数据库
+------------------------
+	1、本机通过socket方式访问 IPC
+	2、通过tcp建立链接到oracle服务器
+	3、通过网络的方式访问	sqlplus   sys/oracle@ora10g as sysdba
+		oracle的网络监听：ora10g这种方式必须在 $ORACLE_HOME/network/admin/tnsname.ora 
+		配置如何访问到远程数据库服务器
+	4、sqlplus sys/oracle@ip:port/sid as sysdba	
+		这种方式不需要任何配置
+		
+oracle网络的配置
+----------------------------
+	pga：用于存储用户的会话信息，主要存储的用户信息(UGA)包括：stack space，session information，
+	sort area，hash area；
+	
+oracle让操作尽可能在内存中执行	
+	
+1、用户进程执行一个语句，比如select * from emp where empno=7839；
+2、用户进程已经跟服务器进程建立链接，并把该用户进程的信息存储到PGA的UGA中
+3、语句经过PGA处理后传递给实例，
+4、实例中的共享池负责处理这条语句
+5、库缓存区去判断语句是否如何分析--软分析 或  硬分析
+6、根据cbo得到的执行计划准备去执行语句
+7、查询语句中的对象存放在那个表空间，指定的行放在那个块里面，可以从数据字典缓冲区得到这些信息
+8、开始执行
+9、判断在数据缓存区data buffer cache是否缓存了需要的块
+	是 --在内存读数据，得到需要的行的结果，返回给用户，用户看到执行的结果
+	否 --服务器进程把块从磁盘缓存到内存中，ndo缓存块会对该块做镜像，然后读
+		镜像中的数据，得到行的记录，用户看到了指定的结果
+
+SGA中三个比较重要的池：shared pool(共享池)，database buffer cache 
+		redo log buffer(重做缓存，用于记录update，insert等操作)
+		
+后台进程
+----------------------------
+	DBWR(重要)：会将database buffer cache中的数据写入到datafile文件中
+	PMON(重要)：
+	LGWR(重要)：将redo log buffer中的日志写入到redo log file(重做日志文件)中
+	CKPT(重要)：保证数据同步，commit或者定时器
+	PMON(重要)：进程间进程
+	SMON(重要)：系统间进程
+	
+oracle server：rdbms的实现的一套完整的解决方案，有instance，database来构成
+	instance：内存结构(sga)和后台进程 
+	database：物理文件 和 物理文件的逻辑结构
+	
+oracle的体系机构	
+--------------------------
+	用户进程：sqlplus,plsql develop,load,spotlight,jforum,j/odbc,oci,others,
+	服务器进程：
+	用户进程和服务器进程之间的交互：
+		1、首先需要具有tnsname.ora 或者直接通过tcp/ip协议链接服务器
+		在用户端不装客户端，从$ORACLE_HOME/network/admin/tnsname.ora 截取 orcl的配置，可以不通过
+		网络监听来连接数据库
+		2、在本地装一个oracle客户端，在 /network/admin/tnsname.ora 文件中添加
+			ORCL =
+			  (DESCRIPTION =
+				(ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))
+				(CONNECT_DATA =
+				  (SERVER = DEDICATED)
+				  (SERVICE_NAME = orcl)
+				)
+			  )
+			则可以通过 用户名@orcl 来进行连接 
+		
+用户进程产生的信息
+--------------------------
+	show parameter user_ :sqlplus查询user开头的参数名
+	v$session:
+	v$sql:
+	v$process:
+	v$sqltext:
 	
 	
