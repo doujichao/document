@@ -5,4 +5,36 @@ create or replace type num_arr as object (
      num number
 );
 
+
 create type num_table as table of num_arr;
+
+
+create table dept(
+   deptno number(2) not null,
+   dname varchar2(14),
+   loc varchar2(13)
+   
+);
+
+create table emp (
+      empno number(4) not null,
+      ename varchar2(10),
+      job varchar2(9),
+      mgr number(4),
+      hiredate date,
+      sal number(7,2),
+      comm number(7,2),
+      deptno number(2)
+);
+
+create table salgrade(
+grade number,
+losal number,
+hisal number
+);
+
+alter user scott identified by tiger account unlock;
+
+select * from dba_users;
+
+select * from v$db_cache_advice;

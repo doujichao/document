@@ -68,11 +68,22 @@
 	
 数据库文件与存储
 --------------------------
-	数据文件 datafile：
+	数据文件 datafile：								v$datafile;
 	表空间	 tablespace：段->区->块
-	控制文件 control file:记录Oracle的结构和行为
-	重做日志文件 redo log:
+	控制文件 control file:记录Oracle的结构和行为 ;	v$controlfile;
+	重做日志文件 redo log :主要记录对于块的操作 ;	v$logfile;
 	初始化参数文件 pfile spfile:
+	密码文件 password files：进行远程登陆			和参数文件同级
+	参数文件 parameter file：记录数据的参数文件，
+		类似与开关二进制参数文件和一般参数文件		v$parameter # spfile
+	归档日志 archived log files:ARCN生成的文件;		v$archived_log
+
+数据库database的一些访问：
+-------------------------------	
+	1、show parameter db_name;
+	2、select * from v$database;查询当前数据库的参数
+	3、select instance_name from v$instance;
+	
 	
 数据库网络访问
 ---------------------
@@ -96,14 +107,109 @@
 		配置如何访问到远程数据库服务器
 	4、sqlplus sys/oracle@ip:port/sid as sysdba	
 		这种方式不需要任何配置
+
+内存区域
+-------------------------
+	pga(程序全局区)：用于存储用户的会话信息，主要存储的用户信息(UGA)包括：stack space，
+		session information,sort area，hash area；主要作用的：专门负责用户进程与oracle进行连接
+		一个用户进程对应一个pga，每个pga之间不进行共享，处理sql语句相关的,
+		相关参数：
+		Pga_aggregate_target:来进行指定内存上限，可以动态修改
+		workarea_size_policy:用来设置pga自动管理(auto)还是手动管理(manual)
+		sort_area_size:排序区大小
+		hash_area_size:哈希区域大小
+	uga：pga下面主要的存储区域：主要存放session information，sort area,hash area
+	sga:系统全局区，主要用于存放共享数据
+
+通过show sga可以查看四个内存区域大小：
+	1、fixed size：固定sga内存区域，不进行共享
+	2、variable size：
+	3、database buffers：数据缓存区
+	4、redo buffers：重做缓存区
+
+修改参数：alter system set 参数名=值；
+sga 的自动管理处理 log buffer不能自动管理，其他都能被自动管理，包括 shared_pool_size，large_pool_size,
+	db_cache_size,java_pool_size,stream_pool_size
+	
+一般只要设置：
+	1、sga_max_size=(80%mem) * 2/3
+	2、sga_target设置一个大小
+	
+SGA系统全局区 可以通过show sga来查询sga内存大小 
+------------------------------
+	共享池：shared pool，通过shared_pool_size决定大小
+		使用：设置shared_pool_size>0和sga_max_size>0 防止一会分配一会回收导致的内存抖动
+		大小:可以运行 start /opt/soft/updba/tech/sript/shared_pool_advice.sql  
+		用于存储：
+			最近执行的sql语句，
+			最近使用的数据定义
+		由两个性能相关的部分组成
+			库缓存：大小由shared pool的大小决定
+				1、存储最近使用的sql和plsql语句的信息
+				2、共享最常用的语句
+				3、管理上遵循LRU规则，缓存常用的
+				4、包括两个部分：
+					共享SQL区和共享PLSQL区
+			数据字典缓存：大小由shared pool决定
+				1、存储在数据库中最近使用的定义
+				2、包括数据文件，表，索引，列，用户，权限和其他数据库对象
+				3、在分析阶段，服务器进程查找数据字典区验证对象的名字以及是否合法访问
+				4、对于查询和DML语句，如果数据字典的信息在缓存中能够提高响应时间
+				
+	数据库缓冲区高速缓存：查询v$db_cache_advice这个视图是推荐大小
+		1、暂存从数据文件中获得的数据块的数据映像
+		2、同样遵循LRU算法管理内存
+		3、当再次需要操作这些数据的时候可以从内存中直接获取和更新，语句执行效率
+			能够大幅度提高
+		4、初始化参数db_block_size决定了数据块的大小，这也是数据库i/o的最小单位
+		5、数据高速缓存区由多个独立的子缓存池构成，可以独立的设置大小
+			1、default池	db_cache_size：默认使用的池
+			2、keep池		db_keep_cache_size：不会被LRU去除
+			3、Recyle池		db_recyle_cache_size：
+		6、只有default池可以被sga自动管理	
+		cache hit：从块中找到数据，速度比较块
+		cache miss: 块中没有找到，需要从数据文件中读取
 		
-oracle网络的配置
-----------------------------
-	pga：用于存储用户的会话信息，主要存储的用户信息(UGA)包括：stack space，session information，
-	sort area，hash area；
+	重做日志缓冲区：
+		1、暂存数据库中所有数据块的改变
+		2、内存管理方法是FIFIO
+		3、重做日志被用于提供数据恢复功能
+		4、暂存重做日志的目的是为了，提高语句的执行速度
+		5、大小由参数log_buffer决定，但这个内存区不能动态调整大小
+	其他：
+		stream池：由stream_pool_size来进行配置
+		大型池：是系统全局中可选的一个内存区，如果没有设置的话，会共享shared pool大小
+			1、主要在下面几种情况下使用
+				1、共享服务器的用户全局区(UGA)
+				2、并行进程
+				3、使用RMAN作备份恢复
+			2、大小由参数large_pool_size决定，也可以动态改变大小	
+		java池：
+			1、也是系统全局区中一个可选内存区
+			2、用于java程序的解析和执行
+			3、大小由java_pool_size决定，也可以动态调整
+			4、如果粒度(granule)是4M，默认是24M，如果granule是16M，默认大小为32M
+			5、如果在数据库创建时，选择了安装jvm组件，那么这个池必须配置
+		固定sga区域：实例启动的时候进行分配
+
+
+
+sga管理 		
+----------------------------------		
+	sga管理：sga_max_size 当>1G时，粒度为16M，<1G为4M
+			 sga_target   当>0时 自动管理，需要上设置sga_max_size和sga_target>0即可，自动管理内存
+				否则动态管理，动态管理时，则需要人工设置 shared_pool_size，large_pool_size,java_pool_size
+				stream_pool_size,db_cache_size这个参数的大小
+	
+粒度(granule)：分配内存的基本单位 可以从V$sgainfo表中查出粒度的大小;
+1、如果sga_max_size小于128M，粒度为4M，否则粒度为16M
+2、各个内存组件分配大小必须时granule的整倍数
+3、整个sga最小不小于3个granule大小
+
+
 	
 oracle让操作尽可能在内存中执行	
-	
+----------------------------------------------
 1、用户进程执行一个语句，比如select * from emp where empno=7839；
 2、用户进程已经跟服务器进程建立链接，并把该用户进程的信息存储到PGA的UGA中
 3、语句经过PGA处理后传递给实例，
@@ -114,20 +220,84 @@ oracle让操作尽可能在内存中执行
 8、开始执行
 9、判断在数据缓存区data buffer cache是否缓存了需要的块
 	是 --在内存读数据，得到需要的行的结果，返回给用户，用户看到执行的结果
-	否 --服务器进程把块从磁盘缓存到内存中，ndo缓存块会对该块做镜像，然后读
+	否 --服务器进程把块从磁盘缓存到内存中，undo缓存块会对该块做镜像，然后读
 		镜像中的数据，得到行的记录，用户看到了指定的结果
 
+
+
 SGA中三个比较重要的池：shared pool(共享池)，database buffer cache 
-		redo log buffer(重做缓存，用于记录update，insert等操作)
+		redo log buffer(重做缓存，用于记录update，insert等操作) 
+		
 		
 后台进程
 ----------------------------
-	DBWR(重要)：会将database buffer cache中的数据写入到datafile文件中
-	PMON(重要)：
-	LGWR(重要)：将redo log buffer中的日志写入到redo log file(重做日志文件)中
-	CKPT(重要)：保证数据同步，commit或者定时器
-	PMON(重要)：进程间进程
-	SMON(重要)：系统间进程
+	DBWn(重要)：会将database buffer cache中的数据写入到datafile文件中，这个是一组进程
+		1、DBWN触发条件：
+			1、发生检查点
+			2、脏缓存达到限制
+			3、没有自由的缓存
+			4、超时发生
+			5、RAC ping请求
+			6、表空间离线
+			7、表空间只读
+			8、表被删或者截断
+			9、开始备份表空间
+		2、后台进程可以跑几个，由参数db_writer_processes
+			1、32bit dbw0---dbw9
+			2、64bit dbwa---dbw.
+	LGWR(重要)：将redo log buffer中的日志写入到redo log file(重做日志文件)中	
+		1、LGWR写的条件
+			1、提交的时候
+			2、达到三分一满
+			3、日志大小到1M
+			4、每个三秒
+			5、在DBWn进程写之前
+	CKPT(重要)：保证数据同步，commit或者定时器,commit/rollback 会触发 dbwr, dbwr会触发lgwr
+		1、给信号给DBWn
+		2、更新数据文件头
+		3、更新控制文件
+	PMON(重要)：进程监控进程
+		1、清楚失败的进程
+			1、回滚事务
+			2、释放锁
+			3、释放其他资源
+			4、重启死掉大dispatchers
+			5、动态注册监听器
+	SMON(重要)：系统监视器
+		1、实例恢复 重启数据库可以自动完成实例恢复，shutdown immediate 关闭，start up 启动;
+			1、前滚所有重做日志的改变
+			2、打开数据库为了用户能访问
+			3、回滚没有提交的事务
+		2、连接自由的空间
+		3、释放临时表空间
+	ARCN:将覆盖之前的重做日志文件进行归档
+	Pnnn:并行进程，用于并行查询或者进行DML操作
+	Dnnn:调度器进程，用于共享模式连接的用户需求操作
+	Snnn:共享服务进程，用于拱型模式连接的用户需求操作
+	MMON:内存监视进程，用于10g性能优化中的统计信息自动收集
+	MMAN:内存监视管理进程，用于10g个内存自动管理
+	RECO:分布式恢复进程，用于回滚未完成的分布式事务
+	Jnnn:任务执行进程，用于完成用户定制的自动执行任务
+	CJQQ:任务调度进程，用于在用户规定的时间唤醒任务进程
+	
+设置归档模式 archive进程通过 log_archive_max_process来设置归档进程数量
+---------------------
+	1、select log_mode from v$database;
+	2、shutdown immediate
+	3、startup mount;
+	4、alter database archivelog;
+	5、alter database archivelog;
+	
+归档参数
+-----------
+	db_recovery_file_dest
+
+
+查看后台进程
+-------------------------------
+1、可以通过 ps -ef | grep ora_ ：查看oracle的后台进程
+2、可以查看select * from v$bgprocess a where a.PADDR != '00';
+3、五个重要进程 select * from v$bgprocess a where a.PADDR != '00' and a.NAME in ('PMON','SMON','LGWR','DBW0','CKPT');
 	
 oracle server：rdbms的实现的一套完整的解决方案，有instance，database来构成
 	instance：内存结构(sga)和后台进程 
@@ -160,4 +330,17 @@ oracle的体系机构
 	v$process:
 	v$sqltext:
 	
-	
+oracle安装
+-------------------------	
+	1、检查安装环境
+		uname -a ：查看系统内核版本
+		df -H：	   查看系统内存大小
+		du -sh /tmp：查看swap分区大小
+	2、修改系统核心参数
+	3、创建有权限的操作系统的用户和组
+			groupadd dba -g 111 ：创建dba组
+			groupadd oinstall -g 111 ：创建安装组
+			useradd oracle -d /home/oracle -g 111 -m -p 15937116841 -u 15937：创建用户
+	4、创建环境变量
+	5、创建安装需要的目录
+	6、执行安装文件开始安装

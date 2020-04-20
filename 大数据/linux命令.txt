@@ -7,6 +7,17 @@
 -------------------
 	sudo passwd
 	
+gparted ubuntu分区工具
+---------------------------
+	1、安装 apt-get install gparted
+	2、分区 扩展分区，未分配分区
+		名词解释：
+			extended partition：拓展分区
+			logical partition：逻辑分区
+			linux—swap：交换分区：内存不足时作为虚拟内存来使用
+	3、查看交换分区是否挂载 free 查看 swap 
+	4、挂载交换分区 swapon /dev/sda5
+	
 查看系统资源
 -----------------------
 	df -hl
