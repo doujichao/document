@@ -321,7 +321,7 @@ oracle的体系机构
 				)
 			  )
 			则可以通过 用户名@orcl 来进行连接 
-		
+		15937116841
 用户进程产生的信息
 --------------------------
 	show parameter user_ :sqlplus查询user开头的参数名
@@ -330,17 +330,80 @@ oracle的体系机构
 	v$process:
 	v$sqltext:
 	
-oracle安装
+管理后台地址 http://localhost:8088/em	
+	
+oracle安装  exec dbms_xdb_config.sethttpport(8088);将oracle管理后台端口改为8088
 -------------------------	
 	1、检查安装环境
 		uname -a ：查看系统内核版本
-		df -H：	   查看系统内存大小
+		df -H：	   查看系统内存大小  至少4个G，或者5个G
 		du -sh /tmp：查看swap分区大小
 	2、修改系统核心参数
+		sysctl -a :查询所有内存参数
+		kernel.sem:
+		net.ipv4.ip_local_port_range:
+		net.core.rmem_default
+		net.core.rmem_max
+		net.core.wmem_max
+		net.core.wmem_default
+		fs.file-max:打开文件数量
+		
+		sysctl -p :使修改生效
 	3、创建有权限的操作系统的用户和组
 			groupadd dba -g 111 ：创建dba组
 			groupadd oinstall -g 111 ：创建安装组
 			useradd oracle -d /home/oracle -g 111 -m -p 15937116841 -u 15937：创建用户
 	4、创建环境变量
+		#.bash_profile
+
+		#get the aliases and functions
+		if [ -f ~/.bashrc ]; then
+			.~/.bashrc
+		fi
+
+		#User specific environment and startup programs
+		export ORACLE_BASE=/soft/oracle
+		export ORACLE_HOME=$ORACLE_BASE/12c
+		export ORACLE_SID=orcl
+		PATH = $PATH:$HOME/bin:$ORACLE_HOME/bin
+
+		export PATH
+
 	5、创建安装需要的目录
 	6、执行安装文件开始安装
+	
+oracle卸载
+----------------------
+	1、手工删除oracle	
+		1、/etc/ora*
+		2、/usr/local/bin/oraenv
+		3、/usr/local/bin/dbhome
+		4、/user/local/bin/coraenv
+		5、$ORACLE_BASE/*
+		
+oracle软件静默安装(非图形界面)
+-------------------------
+	方法一
+		1、安装前准备
+		2、录制脚本
+			录制脚本就是通过选择安装时候的选项来定制一个脚本
+			./runInstaller -record -destinationFile 录制文件地址
+		3、执行静默安装
+	
+	方法二
+		1、安装前准备
+		2、使用软件模板静默安装
+		3、rman实现数据恢复建库
+		4、配置网络服务
+		
+	方法三
+		1、安装前准备
+		2、使用软件模板静默安装
+		3、手工建立数据库
+		4、手工配置网络
+		
+	方法四
+		1、安装前准备
+		2、使用软件模板静默安装
+		3、使用网络模板静默安装
+		4、使用建库模板静默安装

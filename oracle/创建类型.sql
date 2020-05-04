@@ -5,7 +5,7 @@ create or replace type num_arr as object (
      num number
 );
 
-select  * from tb_user;
+select * from tb_user where rownum <= 5;
 
 create type num_table as table of num_arr;
 
